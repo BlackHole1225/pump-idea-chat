@@ -1,0 +1,13 @@
+.marquee-container {
+    display: flex;
+    overflow: hidden;
+    white-space: nowrap;
+    height: 50px; /* Adjust as necessary */
+  }
+  
+  .marquee-message {
+    display: inline-block;
+    padding-right: 50px; /* Adjust space between messages */
+    white-space: nowrap;
+  }
+  
