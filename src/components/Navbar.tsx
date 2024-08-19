@@ -1,5 +1,5 @@
 import { Box, IconButton, useMediaQuery } from "@mui/material";
-import { Link } from "react-router-dom";
+import { Link, useNavigate  } from "react-router-dom";
 import { motion } from "framer-motion";
 import SettingsClosed from "./SettingsClosed";
 import SettingsIcon from "./SettingsIcon";
@@ -8,8 +8,12 @@ import { useAppDispatch, useAppSelector } from "../libs/redux/hooks";
 import { setChatSettingsOpen } from "../libs/redux/slices/chat-slice";
 import AudioPlayerButton from "./AudioPlayerButton";
 import Bottle from "../components/buttons/bottle";
+import { useWallet } from "@solana/wallet-adapter-react";
 
 const Navbar = () => {
+  const { publicKey, disconnect } = useWallet();
+  const navigate = useNavigate();
+
   const isMobile = useMediaQuery("(max-width:768px)");
   const websiteTheme = useAppSelector((state) => state.theme.current.styles);
   const clickAnimation = {
@@ -62,6 +66,14 @@ const Navbar = () => {
     );
   };
 
+  const handleExit = async () => {
+    console.log("exit")
+    if (publicKey) {
+      await disconnect();
+      navigate("/");
+    }
+  };
+
   return isMobile ? (
     <MobileNav />
   ) : (
@@ -79,9 +91,12 @@ const Navbar = () => {
           <Link to={"/profile"}>
             <p style={{ fontFamily: 'JetBrains Mono, monospace' }}>profile</p>
           </Link>
-          <Link to={"/"}>
-            <p style={{ fontFamily: 'JetBrains Mono, monospace' }}>exit</p>
-          </Link>
+          <p
+            style={{ fontFamily: 'JetBrains Mono, monospace', cursor: 'pointer' }}
+            onClick={handleExit}
+          >
+            exit
+          </p>
         </Box>
 
       </Box>

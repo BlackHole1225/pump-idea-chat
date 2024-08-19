@@ -182,3 +182,23 @@ input[type='number']::-webkit-inner-spin-button {
   transform: scale(0.9);
   transition: opacity 500ms, transform 500ms;
 }
+
+.wallet-adapter-dropdown .wallet-adapter-button {
+  width: 100% !important;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  justify-content: center;
+  background-color: white !important;
+  color: rgb(51, 125, 255) !important;
+  font-family: 'jbm', sans-serif; /* Replace with the correct font-family if 'jbm' is not available */
+  font-size: 15px;
+  padding: 8px !important;
+}
+
+@media (min-width: 1024px) {
+  .wallet-adapter-dropdown .wallet-adapter-button {
+    font-size: 24px;
+    padding: 16px !important;
+    height: 70px !important;
+  }
+}

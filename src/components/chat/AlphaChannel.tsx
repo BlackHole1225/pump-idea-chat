@@ -1,10 +1,85 @@
 import { useEffect, useState } from 'react';
 import { useAppSelector } from '../../libs/redux/hooks';
 import CopyTextButton from '../buttons/CopyTextButton';
-import { Box, IconButton, Stack } from '@mui/material';
+import { Box, IconButton, Stack, Modal, Typography } from '@mui/material';
 import { generateRandomHex } from '../../utils';
-import { Button } from "@mui/material";
-import LightButton from "../buttons/LightButton";
+import Button from "@mui/material/Button";
+import TipButton from "../buttons/LightButton";
+import Bolt from "../buttons/BoltButton";
+import styled from "styled-components";
+import Thread from "../buttons/Thread";
+import TokenCard from "./TokenCard";
+
+const TipName = styled("div")`
+    padding-bottom: 8px;
+    margin: 0px 100px 5px;
+    border-bottom: 1px solid grey;
+`;
+
+// Modal Component
+function TipModal({ open, onClose, theme, call }) {
+
+    return (
+        <Modal open={open} onClose={onClose}>
+            <Box
+                sx={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    width: 480,
+                    height: 440,
+                    bgcolor: 'background.paper',
+                    border: `2px solid ${theme.bgColor == '#0000FF' ? theme.bgColor:theme.text_color}`,
+                    boxShadow: 24,
+                    p: 4,
+                    borderRadius: 3,
+                    textAlign: 'center',
+                }}
+            >
+                <div className='flex mx-auto justify-center items-center mb-1'>
+                    <img src={call.profilePic} alt={call.username} className="w-10 h-10 rounded-full" />
+                </div>
+                <TipName className="uppercase text-[14px]" style={{fontFamily: 'Jetbrains mono', color: theme.bgColor == '#0000FF' ? theme.bgColor:theme.text_color}}>{call.username}</TipName>
+                <Typography variant="h6" component="h2" sx={{ mb: 2, color: theme.bgColor == '#0000FF' ? theme.bgColor:theme.text_color }}>
+                    Thank this caller by leaving a tip :)
+                </Typography>
+                <div className='flex mx-auto justify-center items-center mb-1'>
+                    <Thread />
+                </div>
+                <Button
+                    sx={{
+                        bgcolor: theme.bgColor == '#0000FF' ? theme.bgColor:theme.text_color,
+                        color: 'white',
+                        width: '100%',
+                        mb: 2,
+                        fontFamily: "jetbrains mono",
+                        gap: "3px",
+                        top: "10px",
+                        '&:hover': {
+                            bgcolor: '#5D5D5D', // Change the background color on hover
+                        },
+                    }}
+                    onClick={onClose} // You can handle the actual tipping logic here
+                >
+                    <Bolt/>Tip
+                </Button>
+                <Button
+                    sx={{
+                        
+                        color: theme.bgColor == '#0000FF' ? theme.bgColor:theme.text_color,
+                        width: '100%',
+                        left: "5px",
+                        fontFamily: "Jetbrains Mono"
+                    }}
+                    onClick={onClose}
+                >
+                    No Thanks
+                </Button>
+            </Box>
+        </Modal>
+    );
+}
 
 const generateRandomCall = () => {
     const addresses = [
@@ -32,6 +107,8 @@ const generateRandomCall = () => {
 export default function AlphaChannel() {
     const theme = useAppSelector(state => state.theme.current.styles);
     const [calls, setCalls] = useState([generateRandomCall()]);
+    const [openModal, setOpenModal] = useState(false);
+    const [callValue, setCallValue] = useState({});
 
     useEffect(() => {
         const intervalId = setInterval(() => {
@@ -44,6 +121,15 @@ export default function AlphaChannel() {
     const handleDeleteItem = (item_id: string) => {
         setCalls(calls => calls.filter(call => call.id !== item_id))
     }
+
+    const handleTipClick = (call) => {
+        setCallValue(call)
+        setOpenModal(true);
+    };
+
+    const handleCloseModal = () => {
+        setOpenModal(false);
+    };
 
     return (
         <Stack
@@ -61,11 +147,13 @@ export default function AlphaChannel() {
                     Quality alpha from top callers
                 </p>
             </Box>
+
             <Stack
                 divider={
                     <div className="h-[1px] w-[90%] mx-auto mt-[20px]"
                         style={{ background: `linear-gradient(to right, ${theme.bgColor}, ${theme.text_color}, ${theme.bgColor})`, }}
-                    />}
+                    />
+                }
                 direction='column' spacing={2}
                 className="flex flex-col w-full mx-auto overflow-auto no-scrollbar"  >
                 {calls.map((call, index) => (
@@ -83,22 +171,23 @@ export default function AlphaChannel() {
                                 </div>
                             </div>
                             <Button
-                                onClick={()=>{}} // This function opens the Tip modal
+                                onClick={() => handleTipClick(call)} // This now opens the Tip modal
                                 style={{
-                                    border: `1px solid ${theme.bgColor == '#0000FF' ? theme.text_color:theme.text_color}`,
+                                    border: `1px solid ${theme.bgColor == '#0000FF' ? theme.text_color : theme.text_color}`,
                                     left: "0px",
                                     width: "80px",
                                     fontFamily: "JetBrains mono",
                                     top: "10px",
                                     borderRadius: 20,
-                                    color: theme.bgColor == '#0000FF' ? theme.text_color:theme.text_color,
+                                    color: theme.bgColor == '#0000FF' ? theme.text_color : theme.text_color,
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "center",
                                     gap: "6px"
                                 }}
                                 className="px-3 py-1 rounded">
-                                <LightButton />
+                                {/* <LightButton /> */}
+                                <TipButton />
                                 Tip
                             </Button>
                         </div>
@@ -109,16 +198,19 @@ export default function AlphaChannel() {
                             <Box className='w-10 h-10 aspect-square'>
                                 <Box className='hidden group-hover:block'>
                                     <IconButton onClick={() => handleDeleteItem(call.id)}>
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <path d="M10 6H14C14 5.46957 13.7893 4.96086 13.4142 4.58579C13.0391 4.21071 12.5304 4 12 4C11.4696 4 10.9609 4.21071 10.5858 4.58579C10.2107 4.96086 10 5.46957 10 6ZM8 6C8 4.93913 8.42143 3.92172 9.17157 3.17157C9.92172 2.42143 10.9391 2 12 2C13.0609 2 14.0783 2.42143 14.8284 3.17157C15.5786 3.92172 16 4.93913 16 6H21C21.2652 6 21.5196 6.10536 21.7071 6.29289C21.8946 6.48043 22 6.73478 22 7C22 7.26522 21.8946 7.51957 21.7071 7.70711C21.5196 7.89464 21.2652 8 21 8H20.118L19.232 18.34C19.1468 19.3385 18.69 20.2686 17.9519 20.9463C17.2137 21.6241 16.2481 22.0001 15.246 22H8.754C7.75191 22.0001 6.78628 21.6241 6.04815 20.9463C5.31002 20.2686 4.85318 19.3385 4.768 18.34L3.882 8H3C2.73478 8 2.48043 7.89464 2.29289 7.70711C2.10536 7.51957 2 7.26522 2 7C2 6.73478 2.10536 6.48043 2.29289 6.29289C2.48043 6.10536 2.73478 6 3 6H8ZM15 12C15 11.7348 14.8946 11.4804 14.7071 11.2929C14.5196 11.1054 14.2652 11 14 11C13.7348 11 13.4804 11.1054 13.2929 11.2929C13.1054 11.4804 13 11.7348 13 12V16C13 16.2652 13.1054 16.5196 13.2929 16.7071C13.4804 16.8946 13.7348 17 14 17C14.2652 17 14.5196 16.8946 14.7071 16.7071C14.8946 16.5196 15 16.2652 15 16V12ZM10 11C9.73478 11 9.48043 11.1054 9.29289 11.2929C9.10536 11.4804 9 11.7348 9 12V16C9 16.2652 9.10536 16.5196 9.29289 16.7071C9.48043 16.8946 9.73478 17 10 17C10.2652 17 10.5196 16.8946 10.7071 16.7071C10.8946 16.5196 11 16.2652 11 16V12C11 11.7348 10.8946 11.4804 10.7071 11.2929C10.5196 11.1054 10.2652 11 10 11Z" fill="red" />
                                         </svg>
                                     </IconButton>
                                 </Box>
                             </Box>
                         </Box>
+                        <TokenCard />
                     </Box>
                 ))}
             </Stack>
+            {/* Tip Modal */}
+            <TipModal open={openModal} onClose={handleCloseModal} theme={theme} call={callValue} />
         </Stack>
     );
 }

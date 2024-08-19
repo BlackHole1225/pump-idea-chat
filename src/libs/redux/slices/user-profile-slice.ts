@@ -29,6 +29,7 @@ export const loadUserProfile = createAsyncThunk(
     }
 );
 
+
 const userProfileSlice = createSlice({
     name: 'userProfile',
     initialState,
