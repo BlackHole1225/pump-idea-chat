@@ -12,6 +12,7 @@ import "./index.css";
 import { RecoilRoot } from "recoil";
 import { SolanaWalletProvider } from "./components/WalletProvider.tsx";
 import StoreProvider from "./providers/StoreProvider/index.tsx";
+
 import App from "./App.tsx";
 
 // import ErrorPage from "./components/Error.tsx";

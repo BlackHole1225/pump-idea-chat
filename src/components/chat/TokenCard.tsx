@@ -1,5 +1,5 @@
-import React from 'react';
-import { Box, Button, Grid, Typography, Avatar } from '@mui/material';
+// import React from 'react';
+import { Box, Button, Avatar } from '@mui/material';
 import { styled } from '@mui/system';
 // import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 // import { faFingerprint, faSync } from '@fortawesome/free-solid-svg-icons';
