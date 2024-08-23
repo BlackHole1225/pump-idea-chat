@@ -4,17 +4,16 @@ import styled from "styled-components";
 import axios from 'axios';
 import { useAppSelector } from '../../libs/redux/hooks';
 import { generateRandomHex } from '../../utils';
-import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 
 import CopyTextButton from '../buttons/CopyTextButton';
 import TokenCard from "./TokenCard";
 import TipButton from "../buttons/LightButton";
 import Bolt from "../buttons/BoltButton";
 import Thread from "../buttons/Thread";
-import { useWallet } from '@solana/wallet-adapter-react';
-import { Connection, PublicKey, Transaction, SystemProgram } from '@solana/web3.js';
+import { useWallet, useConnection } from '@solana/wallet-adapter-react';
+import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL, TransactionSignature } from '@solana/web3.js';
 
-
+const toAddress = import.meta.env.VITE_TO_ADDRESS;
 const TipName = styled("div")`
     padding-bottom: 8px;
     margin: 0px 100px 5px;
@@ -42,7 +41,8 @@ const TipOptionInput = styled(Input)`
 
 // Modal Component
 function TipModal({ open, onClose, theme, call }) {
-
+    const { connection } = useConnection();
+    const { publicKey, sendTransaction } = useWallet();
     const [amount, setAmount] = useState<number | string>('');
     const [solAmount, setSolAmount] = useState<number>(0);
     const [tipStatus, setTipStatus] = useState<'Tip' | 'Pending Approval' | 'Tipped Successfully' | 'Insufficient Balance'>('Tip');
@@ -51,7 +51,7 @@ function TipModal({ open, onClose, theme, call }) {
     const tipOptionList = [10, 50, 100];
 
     const wallet = useWallet();
-    const { publicKey, sendTransaction, connect, connected } = wallet;
+    const { connect, connected } = wallet;
 
     const fetchSolPrice = async () => {
         try {
@@ -74,42 +74,42 @@ function TipModal({ open, onClose, theme, call }) {
             return;
         }
 
+        // console.log("????????????????????????????????????", toAddress);
+
         const solPrice = await fetchSolPrice();
         const transferAmount = solAmount * LAMPORTS_PER_SOL;
         console.log("transferAmount", transferAmount, "solPrice", solPrice)
         setTipStatus('Pending Approval');
         setDismissStatus(null);
 
-        const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
-        const toPubkey = new PublicKey("A4bvCVXn6p4TNB85jjckdYrDM2WgokhYTmSypQQ5T9Lv");
+        const toPubkey = new PublicKey(toAddress);
         const lamports = Math.round(transferAmount);
 
+        console.log(toPubkey)
+        console.log(lamports)
+
+        let signature: TransactionSignature;
 
         try {
-            const balance = await connection.getBalance(publicKey);
-
-            if (balance < lamports) {
-                console.log("Insufficient Balance")
-                setTipStatus('Insufficient Balance');
-                setDismissStatus('Dismiss');
-                return;
-            }
+            
+            // Add transfer instruction to transaction
+            const receivePubKey = new PublicKey(toPubkey);
             const transaction = new Transaction().add(
                 SystemProgram.transfer({
                     fromPubkey: publicKey,
-                    toPubkey,
-                    lamports,
+                    toPubkey: receivePubKey,
+                    lamports: lamports
                 })
             );
 
-            console.log("transaction", transaction);
-
-            const signature = await sendTransaction(transaction, connection);
-            await connection.confirmTransaction(signature, 'confirmed');
+            console.log("receive address", toPubkey);
+            signature = await sendTransaction(transaction, connection, { signers: [] });
 
             setTipStatus('Tipped Successfully');
             setDismissStatus(null);
+            
         } catch (error) {
+            console.log(error)
             console.error('Transaction failed', error);
             setTipStatus('Insufficient Balance');
             setDismissStatus('Dismiss');

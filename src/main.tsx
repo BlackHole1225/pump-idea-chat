@@ -1,7 +1,7 @@
-if (process.env.NODE_ENV !== 'production') {
-  console.error = () => { };
-  console.warn = () => { };
-}
+// if (process.env.NODE_ENV !== 'production') {
+//   console.error = () => { };
+//   console.warn = () => { };
+// }
 
 import React from "react";
 import ReactDOM from "react-dom/client";

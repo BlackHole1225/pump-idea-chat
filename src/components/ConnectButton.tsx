@@ -49,26 +49,22 @@ export const SolanaConnect: React.FC = () => {
     }
   }, [publicKey, navigate, setIsFirst]);
 
-  const handleConnect = async () => {
-    try {
-      await connect();
-      if (publicKey) {
-        setIsFirst(false); // Update isFirst before navigating
-        navigate("/chat");
-      }
-    } catch (error) {
-      console.error("Error connecting wallet:", error);
-      // Handle error (optional)
-    }
-  };
+  // const handleConnect = async () => {
+  //   try {
+  //     await connect();
+  //     if (publicKey) {
+  //       setIsFirst(false); // Update isFirst before navigating
+  //       navigate("/chat");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error connecting wallet:", error);
+  //     // Handle error (optional)
+  //   }
+  // };
 
   return (
-    <WalletModalProvider>
-      <WalletMultiButton
-        onClick={handleConnect}
-      >
+      <WalletMultiButton>
         CONNECT N GO RETARD
       </WalletMultiButton>
-    </WalletModalProvider>
   );
 };

@@ -167,10 +167,11 @@ export default function App() {
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Landing />} />
-              <Route element={<ProtectedRoute />}>
-                <Route path="/chat" element={<Chat />} />
-                <Route path="/profile" element={<Profile />} />
-              </Route>
+              <Route path="/chat" element={<Chat />} />
+              <Route path="/profile" element={<Profile />} />
+              {/* <Route element={<ProtectedRoute />}>
+                
+              </Route> */}
             </Routes>
           </BrowserRouter>
           <ToastContainer />
