@@ -60,9 +60,9 @@ export default function PumpFilter({ onRequestClose }: { onRequestClose: () => v
 
     const applyFilters = () => {
         dispatch(setSearchParams(
-            filters['filter_listing'].map(item => {
+            filters['filter_listing'].map((item: any) => {
                 if (item.max == null || item.max <= 0 || (item.min && item.max <= item.min)) {
-                    const max = Math.max(...pumpList!.map(att => att[item.name]));
+                    const max = Math.max(...pumpList!.map((att: any) => att[item.name]));
                     return { ...item, max };
                 }
                 return item;

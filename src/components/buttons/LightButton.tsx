@@ -18,8 +18,5 @@ export default function JupiterButton() {
                 </clipPath>
             </defs>
         </svg>
-
-
-
     )
 }

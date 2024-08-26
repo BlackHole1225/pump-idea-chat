@@ -124,9 +124,13 @@ export const connectSocket = (serverUrl: string) => async (dispatch: AppDispatch
     });
 
     socketInstance.on('connect', () => {
+
         dispatch(emitEvent('requestPumpList'))
+
         dispatch(setConnected(true));
     });
+
+    
 
     socketInstance.on('disconnect', () => {
         dispatch(setConnected(false));
@@ -134,6 +138,7 @@ export const connectSocket = (serverUrl: string) => async (dispatch: AppDispatch
 
     socketInstance.on('pumpList', (data: PumpSocketReceived['pumpList']) => {
         dispatch(setPumpSocketState('receiving'))
+        console.log(data);
         dispatch(setPumpList(data));
     });
 

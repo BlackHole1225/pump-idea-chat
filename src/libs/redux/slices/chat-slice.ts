@@ -56,7 +56,7 @@ const initialState: ChatState = {
         motion: 'chaos'
     },
     isChatSettingsOpen: false,
-    chatAudio: musics.find(music => music.name === 'win')?.[0]?.source,
+    chatAudio: musics?.find((music: any) => music.name === 'win')?.[0]?.source,
     isMusicPlaying: false,
     shouldPlayAudio: true,
     state: 'PUMP.RAY',

@@ -1,5 +1,4 @@
-import { useRef, useEffect, useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRef, useEffect } from "react";
 import Footer from "../components/chat/Footer";
 import { Box } from "@mui/material";
 import { useAppSelector, useAppDispatch } from "../libs/redux/hooks";
@@ -8,31 +7,16 @@ import DenChannel from "../components/chat/DenChannel";
 import ContainedLayout from "../layouts/ContainedLayout";
 import { setMusicIsPlaying } from "../libs/redux/slices/chat-slice";
 import AlphaChannel from "../components/chat/AlphaChannel";
-import MyContext from "../context/MyContext";
 
 const Chat = () => {
   const dispatch = useAppDispatch();
   const chatState = useAppSelector(state => state.chat.state);
   const theme = useAppSelector(state => state.theme.current);
-  const chatAudio = useAppSelector(state => state.chat.chatAudio);
+  const chatAudio: any = useAppSelector(state => state.chat.chatAudio);
   const shouldPlayAudio = useAppSelector(state => state.chat.shouldPlayAudio);
   const isMusicPlaying = useAppSelector(state => state.chat.isMusicPlaying);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const navigate = useNavigate();
-  const context = useContext(MyContext);
-
-  if (!context) {
-    throw new Error('Chat must be used within a MyContextProvider');
-  }
-
-  const { isFirst } = context;
-
-  useEffect(() => {
-    if (isFirst) {
-      navigate("/");
-    }
-  }, [isFirst, navigate]);
 
   useEffect(() => {
     if (audioRef.current) {

@@ -25,7 +25,7 @@ import SolanaButton from "../buttons/SolanaButton";
 
 export default function PumpChart() {
 
-    const pumpItem = useAppSelector(state => state.pumpChart.pumpItem);
+    const pumpItem: any = useAppSelector(state => state.pumpChart.pumpItem);
     const theme = useAppSelector(state => state.theme.current.styles);
     const dispatch = useAppDispatch();
     const atClickBuy = () => dispatch(setSelectedtokenToReceive(pumpItem));
@@ -37,7 +37,7 @@ export default function PumpChart() {
         event
         setValue(newValue);
     };
-
+console.log(pumpItem);
     return (
         <motion.div
             initial={{ x: 100, opacity: 0 }}
@@ -50,7 +50,7 @@ export default function PumpChart() {
             }}
             className='gap-4 grid lg:grid-cols-3 max-lg:flex max-lg:flex-col overflow-auto max-lg:h-full no-scrollbar '
         >
-            <PumpDetailsModal onRequestClose={() => setIsModalShown(false)} isOpen={isModalShown} pumpItem={pumpItem} />
+            <PumpDetailsModal onRequestClose={() => setIsModalShown(false)} isOpen={isModalShown} pumpItem={pumpItem } />
             <Box className="md:col-span-2 flex flex-col gap-4 h-max ">
                 <Box className="w-full grid grid-cols-3 sm:p-4 h-max sm:border max-sm:flex max-sm:flex-col relative" 
                      style={{ borderColor: theme.text_color }} // Change border color

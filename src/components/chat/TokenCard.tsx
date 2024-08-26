@@ -1,63 +1,65 @@
-// import React from 'react';
-import { Box, Button, Avatar } from '@mui/material';
-import { styled } from '@mui/system';
+import React from "react";
+import { Box, Button, Avatar } from "@mui/material";
+import { styled } from "@mui/system";
+import { useAppSelector } from "../../libs/redux/hooks";
 // import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 // import { faFingerprint, faSync } from '@fortawesome/free-solid-svg-icons';
 
 const BuyButton = styled(Button)({
-  backgroundColor: '#ffffff',
-  color: '#000000',
-  borderRadius: '0',
-  fontWeight: 'bold',
-  fontSize: '16px',
-  padding: '10px',
-  width: '100%',
-  marginTop: '5px',
-  '&:hover': {
-    backgroundColor: '#f2f2f2',
+  backgroundColor: "#ffffff",
+  color: "#000000",
+  borderRadius: "0",
+  fontWeight: "bold",
+  fontSize: "16px",
+  padding: "10px",
+  width: "100%",
+  marginTop: "5px",
+  "&:hover": {
+    backgroundColor: "#f2f2f2",
   },
 });
 
 const StatBox = styled(Box)({
-  padding: '5px 0',
-  textTransform: 'capitalize',
-  '.title': {
-    fontSize: '14px'
+  padding: "5px 0",
+  textTransform: "capitalize",
+  ".title": {
+    fontSize: "14px",
   },
 });
 
 const TokenCard = () => {
+  const theme = useAppSelector((state) => state.theme.current.styles);
+
   return (
     <Box
-      sx={{
-        backgroundColor: '#333333',
-        color: '#ffffff',
-        padding: '30px 20px',
-        borderRadius: '10px',
-        width: '100%',
+      style={{
+        backgroundColor: theme.alpha_token_card?.bgColor,
+        color: theme.alpha_token_card?.text_color,
+        padding: "30px 20px",
+        borderRadius: "10px",
+        width: "100%",
       }}
     >
-      <div className='flex justify-between pb-2'>
-        <div className='flex items-center'>
+      <div className="flex justify-between pb-2">
+        <div className="flex items-center">
           <Avatar
             src="https://example.com/avatar.jpg" // Replace with the actual image URL
             alt="Frog"
             sx={{ width: 56, height: 56 }}
           />
-          <div className='ml-5'>
+          <div className="ml-5">
             <p>FWOG</p>
-            <p className='lowercase'>just a lil fwog in a big pond</p>
+            <p className="lowercase">just a lil fwog in a big pond</p>
           </div>
-
         </div>
         <div>
-          <Button 
-            sx={{ 
-              color: '#ffffff',
-              border: '2px solid white',
-              borderRadius: '50%',
-              minWidth: '0px',
-              padding: '6px 5.8px',
+          <Button
+            sx={{
+              color: theme.alpha_token_card?.text_color,
+              border: `2px solid ${theme.alpha_token_card?.text_color}`,
+              borderRadius: "50%",
+              minWidth: "0px",
+              padding: "6px 5.8px",
             }}
           >
             {/* <FontAwesomeIcon icon={faSync} size="1x"/> */}
@@ -67,15 +69,14 @@ const TokenCard = () => {
 
       <Box
         sx={{
-          width: '50%',               // Keeps the full width
-          borderBottom: '2px solid',    // Border width
-          borderImage: 'linear-gradient(to right, white, transparent) 1', // Fading effect from white to transparent
-          margin: '10px 0',            // Optional: Add some margin for spacing
+          width: "50%", // Keeps the full width
+          borderBottom: "2px solid", // Border width
+          borderImage: `linear-gradient(to right, ${theme.alpha_token_card?.text_color}, transparent) 1`, // Fading effect from white to transparent
+          margin: "10px 0", // Optional: Add some margin for spacing
         }}
       ></Box>
 
-
-      <div className='flex justify-between py-2'>
+      <div className="flex justify-between py-2">
         <StatBox>
           <p className="title">MCAP</p>
           <p className="value">$18.9M</p>
@@ -114,26 +115,31 @@ const TokenCard = () => {
 
       <Box
         sx={{
-          width: '50%',               // Keeps the full width
-          borderBottom: '2px solid',    // Border width
-          borderImage: 'linear-gradient(to right, white, transparent) 1', // Fading effect from white to transparent
-          margin: '10px 0',            // Optional: Add some margin for spacing
+          width: "50%", // Keeps the full width
+          borderBottom: "2px solid", // Border width
+          borderImage: `linear-gradient(to right, ${theme.alpha_token_card?.text_color}, transparent) 1`, // Fading effect from white to transparent
+          margin: "10px 0", // Optional: Add some margin for spacing
         }}
       ></Box>
 
-      <BuyButton>
+      <BuyButton
+        sx={{
+          backgroundColor: theme.alpha_token_card?.text_color,
+          color: theme.alpha_token_card?.bgColor,
+        }}
+      >
         <Box
           sx={{
-            color: 'black',
-            border: '2px solid black',
-            borderRadius: '50%',
-            minWidth: '0px',
-            padding: '0px 5px',
-            margin: '0px 8px',
+            color: theme.alpha_token_card?.bgColor,
+            border: `2px solid ${theme.alpha_token_card?.bgColor}`,
+            borderRadius: "50%",
+            minWidth: "0px",
+            padding: "0px 5px",
+            margin: "0px 8px",
           }}
         >
           {/* <FontAwesomeIcon icon={faFingerprint} size="1x"/> */}
-        </Box>  
+        </Box>
         BUY
       </BuyButton>
     </Box>

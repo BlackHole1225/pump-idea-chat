@@ -10,7 +10,7 @@ import synthMusic from "../assets/synth.mp3";
 import ambientMusic from "../assets/ambient.mp3";
 import { MotionType } from "../libs/redux/slices/chat-slice";
 
-export const musics = [
+export const musics: any = [
     {
         source: winMusic,
         name: 'win',

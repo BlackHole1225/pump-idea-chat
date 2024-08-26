@@ -94,7 +94,7 @@ export default function ChatSettings() {
         
       </div>
         <div className="col-span-5 grid grid-cols-5 gap-3 max-md:col-span-6 max-md:mt-2 items-center">
-          {musics.map((music, index) => (
+          {musics.map((music: any, index: number) => (
             <div
               key={`music-${index}`}
               className="flex flex-col md:items-center col-span-1"
