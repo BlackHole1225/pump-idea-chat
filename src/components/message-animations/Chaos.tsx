@@ -74,6 +74,29 @@ const Chaos: React.FC = () => {
   const [gridData, setGridData] = useState<MessageItem[]>([]);
   // console.log("/////////////////////////grid data//////////////////////////", gridData);
 
+  // const updateGridWithNewMessage = (newMsg: MessageItem) => {
+  //   const audio = new Audio(messageAudio); // Play the message audio tone
+  //   audio.play().catch((error) => console.error("Error playing audio:", error));
+
+  //   setGridData((prevData) => {
+  //     const emptyRows = prevData.filter((item) => item.isEmpty);
+  //     if (emptyRows.length > 0) {
+
+  //       const randomIndex = Math.floor(Math.random() * emptyRows.length);
+  //       const temp = [...prevData]
+  //       temp.splice(randomIndex, 1);
+  //       return temp
+  //     } else {
+  //       const randomNonRecentMessage = getRandomNonRecentMessage(prevData);
+  //       return prevData.map((item) =>
+  //         item._id === randomNonRecentMessage._id
+  //           ? { ...item, ...newMessage, isEmpty: false }
+  //           : item
+  //       );
+  //     }
+  //   });
+  // };
+
   const updateGridWithNewMessage = (newMsg: MessageItem) => {
     const audio = new Audio(messageAudio);
     audio.play().catch((error) => console.error("Error playing audio:", error));
@@ -231,7 +254,7 @@ const Chaos: React.FC = () => {
                       className={`${message.textClampClass} ${isMobile ? "text-[12px]" : "text-[16px]"
                         }`}
                     >
-                      {message.message}
+                      {message.message.length > 15 ? message.message.substring(0, 15) + "..." : message.message}
                     </p>
                   </div>
                 </div>
