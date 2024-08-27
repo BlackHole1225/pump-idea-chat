@@ -48,7 +48,8 @@
     "swiper": "^11.1.9",
     "swr": "^2.2.5",
     "vite-plugin-checker": "^0.6.4",
-    "vite-plugin-eslint": "^1.8.1"
+    "vite-plugin-eslint": "^1.8.1",
+    "vite-plugin-node-polyfills": "^0.22.0"
   },
   "devDependencies": {
     "@types/lodash.debounce": "^4.0.9",

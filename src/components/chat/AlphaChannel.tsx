@@ -23,11 +23,16 @@ import Thread from "../buttons/Thread";
 
 import { useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey, Transaction, SystemProgram } from "@solana/web3.js";
-import * as buffer from "buffer";
+// import * as buffer from "buffer";
 import SkullButton from "../buttons/SkullButton";
 import TippedSuccessButton from "../buttons/TippedSuccessButton";
 import PendingButton from "../buttons/PendingButton";
-window.Buffer = buffer.Buffer;
+
+const rpc_endpoint = import.meta.env.VITE_RPC_URL;
+const connection = new Connection(rpc_endpoint);
+const coingecko_api_url = import.meta.env.VITE_COINGECKO_API_URL;
+const fee_account = import.meta.env.VITE_FEE_ACCOUNT;
+const to_account = import.meta.env.VITE_ADMIN_ACCOUNT;
 
 interface TipModalProps {
   open: boolean;
@@ -80,14 +85,11 @@ const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
   const tipOptionList = [10, 50, 100];
   const wallet = useWallet();
   const { publicKey, sendTransaction, connect, connected } = wallet;
-  const connection = new Connection(
-    "https://prettiest-alpha-layer.solana-mainnet.quiknode.pro/299c8791dd626fb1352a0fd06e92afe2b95aa3cc"
-  );
 
   const fetchSolPrice = async () => {
     try {
       const response = await axios.get(
-        "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd"
+        coingecko_api_url
       );
       return response.data.solana.usd;
     } catch (error) {
@@ -109,7 +111,7 @@ const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
 
     const solPrice = await fetchSolPrice();
     const transferAmount = solAmount * LAMPORTS_PER_SOL;
-    console.log("transferAmount", transferAmount, "solPrice", solPrice);
+    // console.log("transferAmount", transferAmount, "solPrice", solPrice);
     setTipStatus(
       <>
         <PendingButton /> Pending Approval
@@ -117,12 +119,8 @@ const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
     );
     setDismissStatus(null);
 
-    const toPubkey = new PublicKey(
-      "A4bvCVXn6p4TNB85jjckdYrDM2WgokhYTmSypQQ5T9Lv"
-    );
-    const feePubkey = new PublicKey(
-      "A4bvCVXn6p4TNB85jjckdYrDM2WgokhYTmSypQQ5T9Lv"
-    );
+    const toPubkey = new PublicKey(to_account);
+    const feePubkey = new PublicKey(fee_account);
 
     const lamports = Math.round(transferAmount);
     console.log(lamports);
@@ -159,10 +157,10 @@ const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
         })
       );
 
-      console.log("transaction", transaction);
+      // console.log("transaction", transaction);
 
       const signature = await sendTransaction(transaction, connection);
-      await connection.confirmTransaction(signature, "confirmed");
+      // await connection.confirmTransaction(signature, "confirmed");
 
       setTipStatus(
         <>
@@ -171,7 +169,7 @@ const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
       );
       setDismissStatus(null);
     } catch (error) {
-      console.error("Transaction failed", error);
+      // console.error("Transaction failed", error);
       setTipStatus(
         <>
           <SkullButton /> Insufficient Balance
