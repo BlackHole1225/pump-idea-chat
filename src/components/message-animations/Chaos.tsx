@@ -117,7 +117,7 @@ const Chaos: React.FC = () => {
           message: msg.text,
           username: msg.wallet_address,
           profilePic: msg.sender_pfp?.length ? msg.sender_pfp : `${random_profile_image_url}/${Math.floor(Math.random() * 50)}.jpg`,
-          timestamp: msg.timestamp,
+          timestamp: new Date(msg.timestamp).getTime(),
           isEmpty: false,
           marginClass,
           textClampClass,
@@ -156,13 +156,8 @@ const Chaos: React.FC = () => {
       const messageItem: MessageItem = {
         _id: receivedMessage._id || "",
         message: receivedMessage.message,
-        username:
-          receivedMessage.sender_wallet_address || receivedMessage.walletAddress,
-        profilePic:
-          receivedMessage.sender_pfp ||
-          `${random_profile_image_url}/${Math.floor(
-            Math.random() * 50
-          )}.jpg`,
+        username: receivedMessage.sender_wallet_address || receivedMessage.walletAddress,
+        profilePic: receivedMessage.sender_pfp || `${random_profile_image_url}/${Math.floor(Math.random() * 50)}.jpg`,
         timestamp: new Date(receivedMessage.timestamp).getTime(),
         isEmpty: false,
         marginClass,
@@ -206,7 +201,7 @@ const Chaos: React.FC = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ type: "spring", stiffness: 100, damping: 20 }}
-            className={`flex items-center ${message.rowSpanClass} ${message.colSpanClass} cursor-pointer`} // Add cursor-pointer class
+            className={`flex ${message.rowSpanClass} ${message.colSpanClass} cursor-pointer`} // Add cursor-pointer class
             onClick={() => openModal(message)} // Adding the click handler here
           >
             {message.message ? (
@@ -230,7 +225,7 @@ const Chaos: React.FC = () => {
                       className={`font-bold ${isMobile ? "text-[10px]" : "text-[12px]"
                         }`}
                     >
-                      {message.username}
+                      {message.username.substring(0, 6)}...{message.username.substring(message.username.length - 7, message.username.length - 1)}
                     </p>
                     <p
                       className={`${message.textClampClass} ${isMobile ? "text-[12px]" : "text-[16px]"
