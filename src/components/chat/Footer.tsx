@@ -111,7 +111,7 @@ const Footer = () => {
     <Box className="mx-auto p-4 w-max max-w-full max-sm:w-full max-sm:px-0">
       <Box
         alignItems="flex-start"
-        className="flex justify-between relative gap-2 lg:gap-4 m-auto max-sm:w-full"
+        className="flex justify-between items-center relative gap-2 lg:gap-4 m-auto max-sm:w-full"
       >
         {!(isChatSettingsOpen && !isMobile) && (
           <AnimatePresence>
@@ -120,7 +120,7 @@ const Footer = () => {
               maxWidth="100%"
               display="flex"
             >
-              {chatState === "DEN" && !isChatSettingsOpen && <ChatTextArea />}
+              {chatState === "DEN" && !isChatSettingsOpen && <ChatTextArea handleSendMessage={handleSendMessage} />}
 
               <Box className="w-full flex items-center">
                 <Box
@@ -158,7 +158,7 @@ const Footer = () => {
               </Box>
             </Box>
 
-            {chatState === 'DEN' && (
+            {/* {chatState === 'DEN' && (
               <Box className='max-md:hidden' marginTop={isChatSettingsOpen ? 'auto' : undefined}>
                 <motion.div
                   whileTap={clickAnimation}
@@ -171,7 +171,7 @@ const Footer = () => {
                   </IconButton>
                 </motion.div>
               </Box>
-            )}
+            )} */}
           </AnimatePresence>
         )}
 
@@ -179,7 +179,7 @@ const Footer = () => {
 
         {chatState === "DEN" && (
           <Box
-            className="max-md:hidden"
+            className="max-md:hidden p-[5px]"
             marginTop={isChatSettingsOpen ? "auto" : undefined}
           >
             <motion.div

@@ -6,7 +6,11 @@ import { emitChatEvent } from "../../libs/redux/slices/chat-socket-slice";
 import { useCallback, useRef } from "react";
 import messageAudio from "../../assets/msg.mp3";
 
-export default function ChatTextArea() {
+interface ChatTextAreaProps {
+  handleSendMessage: Function
+}
+
+const ChatTextArea: React.FC<ChatTextAreaProps> = ({handleSendMessage}) => {
   const theme = useAppSelector((state) => state.theme.current.styles);
   const typedMessage = useAppSelector((state) => state.chat.typedMessage);
   const dispatch = useAppDispatch();
@@ -18,19 +22,9 @@ export default function ChatTextArea() {
     return urlPattern.test(message);
   };
 
-  const handleSendMessage = useCallback(() => {
-    if (isLink(typedMessage)) {
-      // You can also show an alert or notification here
-      console.warn("Links are not allowed in the chat.");
-      return;
-    }
-
-    // Play the message audio tone
-    const audio = new Audio(messageAudio);
-    audio.play().catch((error) => console.error("Error playing audio:", error));
-
-    dispatch(emitChatEvent("sendMessage", typedMessage));
-  }, [typedMessage, dispatch]);
+  const sendButtonClick = () => {
+    handleSendMessage();
+  };
 
   const handleInput = useCallback(
     (event: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -84,7 +78,7 @@ export default function ChatTextArea() {
       <motion.div
         style={{ opacity: isButtonDisabled() ? 0.3 : 1 }}
         whileTap={isButtonDisabled() ? undefined : clickAnimation}
-        onClick={handleSendMessage}
+        onClick={sendButtonClick}
       >
         <IconButton disabled={isButtonDisabled()}>
           <svg
@@ -117,3 +111,5 @@ export default function ChatTextArea() {
     </Box>
   );
 }
+
+export default ChatTextArea;
