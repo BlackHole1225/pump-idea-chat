@@ -7,6 +7,8 @@ import debounce from "lodash/debounce";
 import MessageShowModal from "./MessageShowModal";
 import { IconButton, useMediaQuery } from "@mui/material";
 import messageAudio from "../../assets/msg.mp3"; // Import the message audio
+import axios from "axios";
+import { ConstructionOutlined } from "@mui/icons-material";
 
 interface MessageItem extends Message {
   _id: string;
@@ -21,51 +23,20 @@ interface MessageItem extends Message {
   colSpanClass?: string;
 }
 
-// Dummy Area
-const messageLengths = [1, 10, 20, 30, 50, 80, 445];
-
-const messages: Record<number, string> = {
-  1: "Lorem ipsu",
-  10: "Lorem ipsu",
-  20: "Lorem ipsum dolor sit am",
-  30: "Lorem ipsum dolor sit amet, cons",
-  50: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-  80: "In publishing and graphic design, Lorem ipsum serves as a placeholder text often utilized to showcase the visual form of a document or typeface, without depending on meaningful content. It’s a standard tool for designers, allowing them to focus on layout and aesthetics before the final text is available.",
-  445: "In publishing and graphic design, Lorem ipsum is a placeholder text commonly used to demonstrate the visual form of a document or a typeface without relying on meaningful content. Lorem ipsum may be used as a placeholder before the final copy is available.",
-};
-
-const GetRandomParagraph = () => {
-  const randomLength =
-    messageLengths[Math.floor(Math.random() * messageLengths.length)];
-  return messages[randomLength].slice(0, randomLength);
-};
+const random_profile_image_url = import.meta.env.VITE_RANDOM_PROFILE_URL;
+const initial_chat_messages_url = import.meta.env.VITE_INITIAL_CHAT_MESSAGE_URL;
+const websocket_url = import.meta.env.VITE_WEBSOCKET_URL;
 
 const Chaos: React.FC = () => {
-  const dispatch = useAppDispatch();
+  // const dispatch = useAppDispatch();
   const newMessage = useAppSelector((state) => state.chat.newMessage);
+  const [ws, setWs] = useState<WebSocket | null>(null);
   const [messageModal, setMessageModal] = useState({
     isOpen: false,
     message: {} as any,
   });
 
   const isMobile = useMediaQuery("(max-width:768px)");
-  const initGridData = () => {
-    const data = [] as MessageItem[];
-    const { totalSlots } = getGridDimensions();
-    for (let i = 0; i < totalSlots; i++) {
-      const { marginClass, textClampClass, colSpanClass, rowSpanClass } =
-        generateRandomStyles();
-      data.push({
-        ...makeMessage(true),
-        message: "",
-        marginClass,
-        textClampClass,
-        colSpanClass,
-        rowSpanClass,
-      });
-    }
-    return data;
-  };
 
   const getGridDimensions = () => {
     if (window.innerWidth >= 1200) {
@@ -100,81 +71,19 @@ const Chaos: React.FC = () => {
     };
   };
 
-  const makeMessage = (isEmpty: boolean = false) => {
-    const { textClampClass } = generateRandomStyles();
-    const newMsg: MessageItem = {
-      _id: generateRandomHex(),
-      message: GetRandomParagraph(),
-      username: `User_${generateRandomHex(10)}`,
-      profilePic: `https://randomuser.me/api/portraits/men/${Math.floor(
-        Math.random() * 50
-      )}.jpg`,
-      timestamp: Date.now(),
-      isEmpty,
-      textClampClass,
-    };
-    return newMsg;
-  };
+  const [gridData, setGridData] = useState<MessageItem[]>([]);
+  // console.log("/////////////////////////grid data//////////////////////////", gridData);
 
-  const [gridData, setGridData] = useState<MessageItem[]>(initGridData());
-
-  const adjustGridData = (newTotalSlots: number) => {
-    setGridData((prevData) => {
-      const currentTotalSlots = prevData.length;
-      if (newTotalSlots > currentTotalSlots) {
-        const slotsToAdd = newTotalSlots - currentTotalSlots;
-        const newItems = Array.from({ length: slotsToAdd }, () =>
-          makeMessage(true)
-        );
-        return [...prevData, ...newItems];
-      } else if (newTotalSlots < currentTotalSlots) {
-        const slotsToRemove = currentTotalSlots - newTotalSlots;
-        return prevData.slice(0, currentTotalSlots - slotsToRemove);
-      }
-      return prevData;
-    });
-  };
-
-  const updateGridWithNewMessage = () => {
-    const audio = new Audio(messageAudio); // Play the message audio tone
+  const updateGridWithNewMessage = (newMsg: MessageItem) => {
+    const audio = new Audio(messageAudio);
     audio.play().catch((error) => console.error("Error playing audio:", error));
 
-    setGridData((prevData) => {
-      const emptyRows = prevData.filter((item) => item.isEmpty);
-      if (emptyRows.length > 0) {
-        const randomEmptyRow =
-          emptyRows[Math.floor(Math.random() * emptyRows.length)];
-        return prevData.map((item) =>
-          item._id === randomEmptyRow._id
-            ? { ...item, ...newMessage, isEmpty: false }
-            : item
-        );
-      } else {
-        const randomNonRecentMessage = getRandomNonRecentMessage(prevData);
-        return prevData.map((item) =>
-          item._id === randomNonRecentMessage._id
-            ? { ...item, ...newMessage, isEmpty: false }
-            : item
-        );
-      }
-    });
-  };
-
-  const getRandomNonRecentMessage = (messages: MessageItem[]) => {
-    const sortedMessages = [...messages].sort(
-      (a, b) => b.timestamp - a.timestamp
-    );
-    const mostRecentMessage = sortedMessages[0];
-    const nonRecentMessages = sortedMessages.slice(1);
-    if (nonRecentMessages.length === 0) return mostRecentMessage;
-    return nonRecentMessages[
-      Math.floor(Math.random() * nonRecentMessages.length)
-    ];
+    setGridData((prevData) => [...prevData, newMsg]);
   };
 
   const handleResize = useCallback(() => {
     const newConfig = getGridDimensions();
-    adjustGridData(newConfig.totalSlots);
+    // adjustGridData(newConfig.totalSlots);
     setGridConfig(newConfig);
   }, []);
 
@@ -182,29 +91,6 @@ const Chaos: React.FC = () => {
     handleResize,
   ]);
 
-  useEffect(() => {
-    setGridData(initGridData());
-    return () => {
-      setGridData(initGridData());
-    };
-  }, []);
-
-  useEffect(() => {
-    if (newMessage) updateGridWithNewMessage();
-  }, [newMessage]);
-
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      dispatch(addNewMessage(makeMessage()));
-    }, 500);
-
-    window.addEventListener("resize", debouncedHandleResize);
-
-    return () => {
-      clearInterval(intervalId);
-      window.removeEventListener("resize", debouncedHandleResize);
-    };
-  }, [debouncedHandleResize, dispatch]);
 
   const openModal = (message: MessageItem) => {
     setMessageModal({
@@ -212,6 +98,95 @@ const Chaos: React.FC = () => {
       message,
     });
   };
+
+  const fetchMessages = async () => {
+    try {
+      const response = await axios.get(initial_chat_messages_url, {
+        params: {
+          method: 'get_messages',
+          room: 'public'  // Replace with the actual room name or parameter you need
+        }
+      });
+      // console.log(">>>>>>>>>>>>>>>>>>>>> response <<<<<<<<<<<<<<<<<<<<<<<", response)
+      const { totalSlots } = getGridDimensions();
+      const fetchedMessages = response.data.map((msg: any) => {
+        const { marginClass, textClampClass, colSpanClass, rowSpanClass } = generateRandomStyles();
+        // console.log("profile", msg.sender_pfp + `https://randomuser.me/api/portraits/men/${Math.floor(Math.random() * 50)}.jpg`);
+        return {
+          _id: msg._id,
+          message: msg.text,
+          username: msg.wallet_address,
+          profilePic: msg.sender_pfp?.length ? msg.sender_pfp : `${random_profile_image_url}/${Math.floor(Math.random() * 50)}.jpg`,
+          timestamp: msg.timestamp,
+          isEmpty: false,
+          marginClass,
+          textClampClass,
+          colSpanClass,
+          rowSpanClass,
+        }
+      });
+
+      // console.log(">>>>>>>>>>>>>>>>>>>>> fetchedMessages <<<<<<<<<<<<<<<<<<<<<<<", fetchedMessages.reverse())
+
+      setGridData(fetchedMessages.reverse().slice(0, totalSlots));
+      // setGridData(fetchedMessages.reverse());
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchMessages();
+
+    window.addEventListener("resize", debouncedHandleResize);
+
+    const socket = new WebSocket(websocket_url);
+
+    setWs(socket);
+
+    socket.onopen = () => {
+      console.log("WebSocket connection established");
+    };
+
+    socket.onmessage = (event) => {
+      // console.log(">>>>>>>>>>>>>>>>>>>>>>>>event<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+      const receivedMessage = JSON.parse(event.data);
+      console.log("Received message:", receivedMessage);
+      const { marginClass, textClampClass, colSpanClass, rowSpanClass } = generateRandomStyles();
+      const messageItem: MessageItem = {
+        _id: receivedMessage._id || "",
+        message: receivedMessage.message,
+        username:
+          receivedMessage.sender_wallet_address || receivedMessage.walletAddress,
+        profilePic:
+          receivedMessage.sender_pfp ||
+          `${random_profile_image_url}/${Math.floor(
+            Math.random() * 50
+          )}.jpg`,
+        timestamp: new Date(receivedMessage.timestamp).getTime(),
+        isEmpty: false,
+        marginClass,
+        textClampClass,
+        colSpanClass,
+        rowSpanClass,
+      };
+
+      updateGridWithNewMessage(messageItem);
+    };
+
+    socket.onclose = () => {
+      console.log("WebSocket connection closed");
+    };
+
+    socket.onerror = (error) => {
+      console.error("WebSocket error:", error);
+    };
+
+    return () => {
+      window.removeEventListener("resize", debouncedHandleResize);
+      socket.close();
+    };
+  }, [debouncedHandleResize]);
 
   return (
     <div className="flex flex-col h-full w-full overflow-hidden">
@@ -252,16 +227,14 @@ const Chaos: React.FC = () => {
                   </IconButton>
                   <div className="flex-1 flex flex-col justify-start ">
                     <p
-                      className={`font-bold ${
-                        isMobile ? "text-[10px]" : "text-[12px]"
-                      }`}
+                      className={`font-bold ${isMobile ? "text-[10px]" : "text-[12px]"
+                        }`}
                     >
                       {message.username}
                     </p>
                     <p
-                      className={`${message.textClampClass} ${
-                        isMobile ? "text-[12px]" : "text-[16px]"
-                      }`}
+                      className={`${message.textClampClass} ${isMobile ? "text-[12px]" : "text-[16px]"
+                        }`}
                     >
                       {message.message}
                     </p>
