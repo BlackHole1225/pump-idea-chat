@@ -65,6 +65,7 @@ const Footer = () => {
   }, [dispatch]);
 
   const handleSendMessage = useCallback(() => {
+    // console.log("test handle send message");
     if (ws && ws.readyState === WebSocket.OPEN) {
       const message = {
         text: typedMessage,

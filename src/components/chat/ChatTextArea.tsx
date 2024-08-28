@@ -23,6 +23,7 @@ const ChatTextArea: React.FC<ChatTextAreaProps> = ({handleSendMessage}) => {
   };
 
   const sendButtonClick = () => {
+    // console.log("send button click");
     handleSendMessage();
   };
 

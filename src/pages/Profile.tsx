@@ -10,7 +10,7 @@ import { useAppSelector } from "../libs/redux/hooks";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { BottleSvg } from "../components/buttons/bottle";
 
-const BASE_URI = "https://prithvikr.live";
+const BASE_URI = import.meta.env.VITE_CHAT_SERVER_URL;
 
 const Profile = () => {
   const websiteTheme = useAppSelector((state) => state.theme.current.styles);
@@ -27,24 +27,35 @@ const Profile = () => {
   const wallet = useWallet();
   const navigate = useNavigate();
 
-  // Load existing profile data
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const response = await axios.get(
-          `${BASE_URI}/api/user-profile?walletAddress=A4bvCVXn6p4TNB85jjckdYrDM2WgokhYTmSypQQ5T9Lv`
+        const response = await axios.post(
+          BASE_URI,
+          {
+            method: "register",
+            walletAddress: wallet.publicKey?.toString(), // Sending the wallet address
+          }
         );
-        const { userName, profilePicUrl } = response.data;
-        setUserName(userName || ""); // Populate username using Recoil
-        setProfilePicFromS3(profilePicUrl || ""); // Populate profile picture
-        setProfilePic(profilePicUrl || ""); // Set profile picture state
+
+        if (response.data) {
+          if (response.data.user) {
+            const userName = response.data.user.username;
+            setUserName(userName || "");
+            const profilePicUrl = response.data.user.profilePic;
+            setProfilePic(profilePicUrl || "");
+            setProfilePicFromS3(profilePicUrl || ""); // Populate profile picture
+          }
+        }
       } catch (error) {
         console.error("Error fetching user profile:", error);
       }
     };
 
-    fetchUserProfile();
-  }, [walletAddress, setProfilePicFromS3, setUserName]);
+    if (wallet.publicKey) {
+      fetchUserProfile();
+    }
+  }, [wallet.publicKey, setProfilePicFromS3, setUserName]);
 
   const handleFileChange = (event: any) => {
     setShowProfilePicError(false);
@@ -65,21 +76,26 @@ const Profile = () => {
 
     try {
       if (profilePic && profilePic instanceof File) {
-        const formData = new FormData();
-        formData.append("profilePic", profilePic);
+        // Convert image file to base64
+        const reader = new FileReader();
+        reader.readAsDataURL(profilePic);
+        reader.onloadend = async () => {
+          const base64Image = reader.result as string;
 
-        const response = await axios.post(
-          `${BASE_URI}/api/profile-pic?walletAddress=${walletAddress}`,
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
+          const response = await axios.post(BASE_URI, {
+            method: "update_profile_pic",
+            walletAddress: wallet.publicKey?.toString(),
+            pfpBase64: base64Image.split(",")[1], // Send base64 string without the prefix
+          });
+
+          const data = response.data;
+          if (!data.error) {
+            setProfilePicFromS3(data.s3_compressed_url); // Update Recoil state with the new image URL
+            setProfilePic(data.s3_compressed_url);
+          } else {
+            console.error("Error updating profile picture:", data.message);
           }
-        );
-        const data = response.data;
-        setProfilePicFromS3(data.data.Location); // Update Recoil state
-        setProfilePic(data.data.Location);
+        };
       }
 
       if (userName) {
@@ -95,10 +111,19 @@ const Profile = () => {
 
   const saveUserName = async (newUserName: string) => {
     try {
-      await axios.post(`${BASE_URI}/api/save-username`, {
-        userName: newUserName,
-        walletAddress,
+      const response = await axios.post(BASE_URI, {
+        method: "update_username",
+        username: newUserName,
+        walletAddress: wallet.publicKey?.toString(), // Sending the wallet address
       });
+
+      if (response.data) {
+        if (response.data.user) {
+          const userName = response.data.user.username;
+          setUserName(userName || "");
+        }
+      }
+
       console.log("Username saved successfully");
     } catch (error) {
       console.error("Error saving username:", error);
@@ -117,7 +142,7 @@ const Profile = () => {
     }
   }, [userName]);
 
-  const renderProfilePic = useMemo(() => {
+  const renderProfilePic = () => {
     if (profilePic instanceof File) {
       try {
         return URL.createObjectURL(profilePic);
@@ -127,7 +152,7 @@ const Profile = () => {
     } else {
       return profilePicFromS3 || "";
     }
-  }, [profilePic, profilePicFromS3]);
+  };
 
   const handleSuccessClose = () => {
     setShowSuccessMessage(false);
@@ -155,20 +180,12 @@ const Profile = () => {
                 className="relative group border h-[100px] w-[100px] lg:h-[200px] lg:w-[200px] rounded-[100%] flex items-center justify-center"
                 style={{ borderColor: websiteTheme.text_color }}
               >
-                <div
-                  className={`rounded-full h-full w-full overflow-hidden ${
-                    renderProfilePic ? "" : "flex items-center justify-center"
-                  }`}
-                >
-                  {renderProfilePic ? (
-                    <img
-                      alt=""
-                      src={renderProfilePic}
-                      className="object-cover w-full h-full"
-                    />
-                  ) : (
-                    <BottleSvg className="w-1/2 h-3/4 m-auto" />
-                  )}
+                <div className={`rounded-full h-full w-full overflow-hidden`}>
+                  <img
+                    alt=""
+                    src={renderProfilePic()}
+                    className="object-cover w-full h-full"
+                  />
                 </div>
 
                 <form

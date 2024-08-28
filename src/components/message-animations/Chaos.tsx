@@ -23,7 +23,7 @@ interface MessageItem extends Message {
 }
 
 const random_profile_image_url = import.meta.env.VITE_RANDOM_PROFILE_URL;
-const initial_chat_messages_url = import.meta.env.VITE_INITIAL_CHAT_MESSAGE_URL;
+const initial_chat_messages_url = import.meta.env.VITE_CHAT_SERVER_URL;
 const websocket_url = import.meta.env.VITE_WEBSOCKET_URL;
 
 const Chaos: React.FC = () => {
@@ -74,7 +74,7 @@ const Chaos: React.FC = () => {
   // console.log("/////////////////////////grid data//////////////////////////", gridData);
 
   const updateGridWithNewMessage = (newMsg: MessageItem) => {
-    console.log("updated with new message", newMsg);
+    // console.log("updated with new message", newMsg);
     const audio = new Audio(messageAudio); // Play the message audio tone
     audio.play().catch((error) => console.error("Error playing audio:", error));
 
@@ -85,7 +85,7 @@ const Chaos: React.FC = () => {
       // console.log("girid data", prevData);
       if (prevData.length >= totalSlots) {
         const randomIndex = Math.floor(Math.random() * totalSlots);
-        console.log("random index - randomIndex", totalSlots, randomIndex);
+        // console.log("random index - randomIndex", totalSlots, randomIndex);
         const temp = [...prevData]
         temp.splice(randomIndex, 1, newMsg);
         return temp
@@ -112,7 +112,7 @@ const Chaos: React.FC = () => {
     handleResize,
   ]);
 
-  console.log("grid data", gridData);
+  // console.log("grid data", gridData);
 
   const openModal = (message: MessageItem) => {
     setMessageModal({
@@ -138,7 +138,7 @@ const Chaos: React.FC = () => {
         return {
           _id: msg._id,
           message: msg.text,
-          username: msg.wallet_address,
+          username: msg.username == "Unknown" || msg.username == "" ? msg.walletAddress : msg.username,
           profilePic: msg.sender_pfp?.length ? msg.sender_pfp : `${random_profile_image_url}/${Math.floor(Math.random() * 50)}.jpg`,
           timestamp: new Date(msg.timestamp).getTime(),
           isEmpty: false,
@@ -179,7 +179,7 @@ const Chaos: React.FC = () => {
       const messageItem: MessageItem = {
         _id: receivedMessage._id || "",
         message: receivedMessage.message,
-        username: receivedMessage.sender_wallet_address || receivedMessage.walletAddress,
+        username: receivedMessage.sender_username == "Unknown" || receivedMessage.sender_username == "" ? receivedMessage.sender_wallet_address || receivedMessage.walletAddress : receivedMessage.sender_username,
         profilePic: receivedMessage.sender_pfp?.length ? receivedMessage.sender_pfp : `${random_profile_image_url}/${Math.floor(Math.random() * 50)}.jpg`,
         timestamp: new Date(receivedMessage.timestamp).getTime(),
         isEmpty: false,
@@ -245,10 +245,10 @@ const Chaos: React.FC = () => {
                   </IconButton>
                   <div className="flex-1 flex flex-col justify-start ">
                     <p
-                      className={`font-bold ${isMobile ? "text-[10px]" : "text-[12px]"
+                      className={`font-bold max-w-48 text-wrap break-all ${isMobile ? "text-[10px]" : "text-[12px]"
                         }`}
                     >
-                      {message.username.substring(0, 6)}...{message.username.substring(message.username.length - 7, message.username.length - 1)}
+                      {message.username}
                     </p>
                     <div
                       className={`${message.textClampClass} ${isMobile ? "text-[12px] max-w-48 text-wrap break-all" : "block text-[16px] max-w-48 text-wrap break-all"
