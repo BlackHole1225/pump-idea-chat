@@ -1,8 +1,7 @@
-import React,{FC, useEffect, useState} from "react";
+import React from "react";
 import { Box, Button, Avatar } from "@mui/material";
 import { styled } from "@mui/system";
 import { useAppSelector } from "../../libs/redux/hooks";
-import { Connection } from "@solana/web3.js";
 // import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 // import { faFingerprint, faSync } from '@fortawesome/free-solid-svg-icons';
 
@@ -28,20 +27,9 @@ const StatBox = styled(Box)({
   },
 });
 
-interface TokenCardProps {
-  mint:string;
-  marketData:any;
-  holders:number;
-  supply:number;
-  marketCap:number;
-  tokenInfo:any;
-}
-
-const TokenCard:FC<TokenCardProps> = ({mint,marketData,holders,supply,marketCap,tokenInfo}) => {
+const TokenCard = () => {
   const theme = useAppSelector((state) => state.theme.current.styles);
-  useEffect(()=>{
-    console.log(marketData)
-  },[])
+
   return (
     <Box
       style={{
@@ -55,12 +43,12 @@ const TokenCard:FC<TokenCardProps> = ({mint,marketData,holders,supply,marketCap,
       <div className="flex justify-between pb-2">
         <div className="flex items-center">
           <Avatar
-            src={`https://dd.dexscreener.com/ds-data/tokens/solana/${mint}.png`} // Replace with the actual image URL
+            src="https://example.com/avatar.jpg" // Replace with the actual image URL
             alt="Frog"
             sx={{ width: 56, height: 56 }}
           />
           <div className="ml-5">
-            <p>{marketData.pairs[0].baseToken.name!="Wrapped SOL"?marketData.pairs[0].baseToken.name:marketData.pairs[0].quoteToken.name}</p>
+            <p>FWOG</p>
             <p className="lowercase">just a lil fwog in a big pond</p>
           </div>
         </div>
@@ -91,19 +79,19 @@ const TokenCard:FC<TokenCardProps> = ({mint,marketData,holders,supply,marketCap,
       <div className="flex justify-between py-2">
         <StatBox>
           <p className="title">MCAP</p>
-          <p className="value">${marketCap}</p>
+          <p className="value">$18.9M</p>
         </StatBox>
         <StatBox>
           <p className="title">HOLDERS</p>
-          <p className="value">{holders}</p>
+          <p className="value">2,263</p>
         </StatBox>
         <StatBox>
           <p className="title">VOLUME</p>
-          <p className="value">${marketData.pairs[0].volume.h24}</p>
+          <p className="value">$4.5M</p>
         </StatBox>
         <StatBox>
           <p className="title">LIQUIDITY</p>
-          <p className="value">${marketData.pairs[0].liquidity.usd}</p>
+          <p className="value">$1.1M</p>
         </StatBox>
         <StatBox>
           <p className="title">ATH</p>
@@ -116,7 +104,7 @@ const TokenCard:FC<TokenCardProps> = ({mint,marketData,holders,supply,marketCap,
 
         <StatBox>
           <p className="title">MINT</p>
-          <p className="value">{tokenInfo.mintAuthority?`Enabled`:`Disabled`}</p>
+          <p className="value">Disabled</p>
         </StatBox>
 
         <StatBox>
