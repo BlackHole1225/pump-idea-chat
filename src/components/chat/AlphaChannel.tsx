@@ -371,9 +371,9 @@ const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
 
 const generateRandomCall = () => {
   const addresses = [
-    "FH6Ksp8AkTHvT7rfSzyHTiJM4JVDQBucr1JgkyQjpump",
-    "FH6Ksp8AkTHvT7rfSzyHTiJM4JVDQBucr1JgkyQjpump",
-    "FH6Ksp8AkTHvT7rfSzyHTiJM4JVDQBucr1JgkyQjpump",
+    "FV56CmR7fhEyPkymKfmviKV48uPo51ti9kAxssQqTDLu",
+    "A1b2C3d4E5f6G7h8I9j0K1L2m3N4o5P6q7R8S9t0U1V2W3X4Y5Z6",
+    "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
   ];
   const messages = [
     "“Invested all my savings into this project, it’s the future!”",
@@ -381,14 +381,16 @@ const generateRandomCall = () => {
     "“Hoping this turns into something big, crossing fingers!”",
   ];
   const usernames = ["alpha_hoe", "beta_boss", "gamma_guru"];
-  const address= addresses[Math.floor(Math.random() * addresses.length)]
+
   return {
     id: generateRandomHex(),
-    address,
+    address: addresses[Math.floor(Math.random() * addresses.length)],
     message: messages[Math.floor(Math.random() * messages.length)],
     username: usernames[Math.floor(Math.random() * usernames.length)],
     timestamp: Date.now() + Math.floor(Math.random() * 600),
-    profilePic: `https://dd.dexscreener.com/ds-data/tokens/solana/${address}.png`,
+    profilePic: `https://randomuser.me/api/portraits/men/${Math.floor(
+      Math.random() * 50
+    )}.jpg`,
   };
 };
 
@@ -399,13 +401,13 @@ export default function AlphaChannel() {
   const [openModal, setOpenModal] = useState(false);
   const [callValue, setCallValue] = useState({});
 
-  // useEffect(() => {
-  //   const intervalId = setInterval(() => {
-  //     setCalls((prevCalls) => [generateRandomCall(), ...prevCalls]);
-  //   }, 10000);
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setCalls((prevCalls) => [generateRandomCall(), ...prevCalls]);
+    }, 10000);
 
-  //   return () => clearInterval(intervalId);
-  // }, []);
+    return () => clearInterval(intervalId);
+  }, []);
 
   const handleDeleteItem = (item_id: string) => {
     setCalls((calls) => calls.filter((call) => call.id !== item_id));
@@ -533,7 +535,7 @@ export default function AlphaChannel() {
                 </Box>
               </Box>
             </Box>
-            <TokenCard mint={call.address} />
+            <TokenCard />
           </Box>
         ))}
       </Stack>
