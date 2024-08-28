@@ -163,7 +163,7 @@ const Focused = () => {
       });
 
       // console.log(">>>>>>>>>>>>>>>>>>>>> fetchedMessages <<<<<<<<<<<<<<<<<<<<<<<", fetchedMessages.reverse())
-      setAllMessages(fetchedMessages);
+      setAllMessages(fetchedMessages.reverse());
       // setGridData(fetchedMessages.reverse());
     } catch (error) {
       console.error('Error fetching messages:', error);
@@ -211,7 +211,6 @@ const Focused = () => {
   }, []);
 
   const scrollToBottom = () => {
-    // messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     const scrollHeight = messagesEndRef.current?.scrollHeight
     messagesEndRef.current?.scrollTo({
       top: scrollHeight,
