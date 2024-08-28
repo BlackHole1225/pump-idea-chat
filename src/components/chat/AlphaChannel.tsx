@@ -28,7 +28,6 @@ import SkullButton from "../buttons/SkullButton";
 import TippedSuccessButton from "../buttons/TippedSuccessButton";
 import PendingButton from "../buttons/PendingButton";
 // window.Buffer = buffer.Buffer;
-
 interface TipModalProps {
   open: boolean;
   onClose: () => void;
@@ -39,13 +38,12 @@ interface TipModalProps {
 }
 
 interface Message {
-  _id: any;
-  user_id: string,
-  walletAddress: string;
-  username: string;
-  profilePic: string;
-  alphaAcess: Boolean;
-  timestamp: string;
+  id: any,
+  message: string,
+  username: string,
+  address: string,
+  profilePic: string,
+  timestamp: Number,
 }
 
 const TipName = styled("div")`
@@ -80,6 +78,7 @@ const admin_account = import.meta.env.VITE_ADMIN_ACCOUNT;
 const random_profile_image_url = import.meta.env.VITE_RANDOM_PROFILE_URL;
 const initial_chat_messages_url = import.meta.env.VITE_CHAT_SERVER_URL;
 const websocket_url = import.meta.env.VITE_WEBSOCKET_URL;
+const room = 'alpha';
 
 // Modal Component
 const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
@@ -256,9 +255,8 @@ const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
           transform: "translate(-50%, -50%)",
           width: 480,
           bgcolor: "background.paper",
-          border: `2px solid ${
-            theme.bgColor == "#0000FF" ? theme.bgColor : theme.text_color
-          }`,
+          border: `2px solid ${theme.bgColor == "#0000FF" ? theme.bgColor : theme.text_color
+            }`,
           boxShadow: 24,
           p: 2,
           borderRadius: 3,
@@ -346,14 +344,14 @@ const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
             top: "12px",
             "&:hover": isTipBtnDisabled
               ? {
-                  bgcolor:
-                    theme.bgColor == "#0000FF"
-                      ? theme.bgColor
-                      : theme.text_color,
-                }
+                bgcolor:
+                  theme.bgColor == "#0000FF"
+                    ? theme.bgColor
+                    : theme.text_color,
+              }
               : {
-                  bgcolor: theme.tip_card?.btn_color,
-                },
+                bgcolor: theme.tip_card?.btn_color,
+              },
             cursor: isTipBtnDisabled ? "not-allowed" : "pointer",
             opacity: isTipBtnDisabled ? 0.5 : 1,
           }}
@@ -380,46 +378,21 @@ const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
   );
 };
 
-const generateRandomCall = () => {
-  const addresses = [
-    "FV56CmR7fhEyPkymKfmviKV48uPo51ti9kAxssQqTDLu",
-    "A1b2C3d4E5f6G7h8I9j0K1L2m3N4o5P6q7R8S9t0U1V2W3X4Y5Z6",
-    "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
-  ];
-  const messages = [
-    "“Invested all my savings into this project, it’s the future!”",
-    "“Just got my first reward, feeling excited!”",
-    "“Hoping this turns into something big, crossing fingers!”",
-  ];
-  const usernames = ["alpha_hoe", "beta_boss", "gamma_guru"];
-
-  return {
-    id: generateRandomHex(),
-    address: addresses[Math.floor(Math.random() * addresses.length)],
-    message: messages[Math.floor(Math.random() * messages.length)],
-    username: usernames[Math.floor(Math.random() * usernames.length)],
-    timestamp: Date.now() + Math.floor(Math.random() * 600),
-    profilePic: `${random_profile_image_url}/${Math.floor(
-      Math.random() * 50
-    )}.jpg`,
-  };
-};
-
 export default function AlphaChannel() {
   const theme = useAppSelector((state) => state.theme.current.styles);
-  const [calls, setCalls] = useState([generateRandomCall()]);
+  const [calls, setCalls] = useState<Message[]>([]);
   const [ws, setWs] = useState<WebSocket | null>(null);
 
   const [openModal, setOpenModal] = useState(false);
   const [callValue, setCallValue] = useState({});
 
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      setCalls((prevCalls) => [generateRandomCall(), ...prevCalls]);
-    }, 10000);
+  // useEffect(() => {
+  //   const intervalId = setInterval(() => {
+  //     setCalls((prevCalls) => [generateRandomCall(), ...prevCalls]);
+  //   }, 10000);
 
-    return () => clearInterval(intervalId);
-  }, []);
+  //   return () => clearInterval(intervalId);
+  // }, []);
 
   const handleDeleteItem = (item_id: string) => {
     setCalls((calls) => calls.filter((call) => call.id !== item_id));
@@ -444,20 +417,21 @@ export default function AlphaChannel() {
         }
       });
 
+      console.log("data", response.data);
+
       const fetchedMessages = response.data.map((msg: any) => {
         return {
-          _id: msg._id,
+          id: msg._id,
           message: msg.text,
-          username: msg.username == "Unknown" || msg.username == "" ? msg.walletAddress : msg.walletAddress,
-          alphaAccess: msg.alphaAccess,
-          room: msg.room,
+          username: msg.username,
+          address: msg.walletAddress,
           profilePic: msg.sender_pfp?.length ? msg.sender_pfp : `${random_profile_image_url}/${Math.floor(Math.random() * 50)}.jpg`,
           timestamp: new Date(msg.timestamp).getTime(),
         }
       });
 
-      console.log(">>>>>>>>>>>>>>>>>>>>> fetchedMessages <<<<<<<<<<<<<<<<<<<<<<<", response.data)
-
+      // console.log(">>>>>>>>>>>>>>>>>>>>> fetchedMessages <<<<<<<<<<<<<<<<<<<<<<<", fetchedMessages)
+      setCalls(fetchedMessages);
       // setGridData(fetchedMessages.reverse().slice(0, totalSlots));
       // setGridData(fetchedMessages.reverse());
     } catch (error) {
@@ -468,7 +442,7 @@ export default function AlphaChannel() {
   useEffect(() => {
     fetchMessages();
 
-    const socket = new WebSocket(`${websocket_url}/?room='alpha'`);
+    const socket = new WebSocket(`${websocket_url}?room=${encodeURIComponent(room)}`);
 
     setWs(socket);
 
@@ -480,16 +454,17 @@ export default function AlphaChannel() {
       // console.log(">>>>>>>>>>>>>>>>>>>>>>>>event<<<<<<<<<<<<<<<<<<<<<<<<<<<");
       const receivedMessage = JSON.parse(event.data);
       console.log("alpha Received message:", receivedMessage);
-      // const { marginClass, textClampClass, colSpanClass, rowSpanClass } = generateRandomStyles();
-      // const messageItem: Message = {
-      //   _id: receivedMessage._id || "",
 
-      //   username: receivedMessage.sender_username == "Unknown" || receivedMessage.sender_username == "" ? receivedMessage.sender_wallet_address || receivedMessage.walletAddress : receivedMessage.sender_username,
-      //   profilePic: receivedMessage.sender_pfp?.length ? receivedMessage.sender_pfp : `${random_profile_image_url}/${Math.floor(Math.random() * 50)}.jpg`,
-      //   isEmpty: false
-      // };
+      const message = {
+        id: receivedMessage._id,
+        message: receivedMessage.message,
+        username: receivedMessage.sender_username,
+        address: receivedMessage.sender_wallet_address,
+        profilePic: receivedMessage.sender_pfp?.length ? receivedMessage.sender_pfp : `${random_profile_image_url}/${Math.floor(Math.random() * 50)}.jpg`,
+        timestamp: new Date(receivedMessage.timestamp).getTime(),
+      }
 
-      // updateGridWithNewMessage(messageItem);
+      setCalls((prevCalls) => [message, ...prevCalls]);
     };
 
     socket.onclose = () => {
@@ -568,11 +543,10 @@ export default function AlphaChannel() {
               <Button
                 onClick={() => handleTipClick(call)} // This now opens the Tip modal
                 style={{
-                  border: `1px solid ${
-                    theme.bgColor == "#0000FF"
-                      ? theme.text_color
-                      : theme.text_color
-                  }`,
+                  border: `1px solid ${theme.bgColor == "#0000FF"
+                    ? theme.text_color
+                    : theme.text_color
+                    }`,
                   left: "0px",
                   width: "80px",
                   fontFamily: "JetBrains mono",

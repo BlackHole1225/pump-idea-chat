@@ -1,7 +1,7 @@
 import { useCallback, useState, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "../../libs/redux/hooks";
 import { IChatStates } from "../../common/types";
-import { Box, IconButton, useMediaQuery } from "@mui/material";
+import { alpha, Box, IconButton, useMediaQuery } from "@mui/material";
 import {
   setChatSettingsOpen,
   setChatState,
@@ -122,7 +122,7 @@ const Footer = () => {
       const message = {
         text: typedMessage,
         walletAddress: wallet.publicKey?.toString(), // Replace with actual user wallet address
-        room: chatState.toLowerCase(),
+        alpha: true,
         action: "sendMessage",
       };
       ws.send(JSON.stringify(message));
