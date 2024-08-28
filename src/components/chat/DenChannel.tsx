@@ -1,7 +1,7 @@
 import { Box } from '@mui/material'
 import Focused from '../message-animations/Focused'
 import Chaos from '../message-animations/Chaos'
-import EquatorTest from '../message-animations/EquatorTest'
+import GlobalChat from '../message-animations/Equator'
 import { useAppSelector } from '../../libs/redux/hooks' 
 
 export default function DenChannel() {
@@ -10,7 +10,7 @@ export default function DenChannel() {
   return (
     <Box className='flex flex-col justify-center h-full overflow-hidden w-full ' >
       <Box className="relative overflow-y-auto w-full no-scrollbar h-full" flexGrow='1'>
-        {settingsModal === "focused" ? <Focused /> : settingsModal === "chaos" ? <Chaos /> : <EquatorTest />}
+        {settingsModal === "focused" ? <Focused /> : settingsModal === "chaos" ? <Chaos /> : <GlobalChat />}
         {/* <Chaos /> */}
       </Box>
     </Box>

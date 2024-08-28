@@ -2,14 +2,13 @@ import { useState, useEffect } from "react";
 import Marquee from "react-fast-marquee";
 import { websiteThemeState } from "../../atoms/website-theme";
 import { useRecoilValue } from "recoil";
+import axios from "axios";
+
+const random_profile_image_url = import.meta.env.VITE_RANDOM_PROFILE_URL;
+const initial_chat_messages_url = import.meta.env.VITE_CHAT_SERVER_URL;
+const websocket_url = import.meta.env.VITE_WEBSOCKET_URL;
 
 interface Message {
-  _id: any;
-  message: string;
-  username: string;
-  profilePic: string;
-}
-interface InitialMessage {
   _id: any;
   message: string;
   username: string;
@@ -26,7 +25,7 @@ const Slider = ({
   const websiteTheme = useRecoilValue(websiteThemeState);
   return (
     <Marquee
-      className=""
+      className="overflow-hidden"
       speed={40}
       delay={0}
       autoFill
@@ -53,7 +52,7 @@ const Slider = ({
                 />
               </div>
               <p
-                className="text-[46px] max-w-[550px] my-auto font-mono"
+                className="max-w-[550px] break-all text-wrap my-auto font-mono"
                 style={{
                   fontFamily: "JetBrains Mono",
                 }}
@@ -88,7 +87,7 @@ const Slider = ({
                 />
               </div>
               <p
-                className="text-[14px] max-w-[500px] font-mono"
+                className="text-[14px] max-w-[550px] break-all text-wrap font-mono"
                 style={{
                   fontFamily: "JetBrains Mono",
                 }}
@@ -109,28 +108,23 @@ const Slider = ({
   );
 };
 
-const GlobalChat = ({
-  initialMessages,
-  newMessage,
-}: {
-  initialMessages: InitialMessage[];
-  newMessage: Message[];
-}) => {
+const GlobalChat = () => {
   const websiteTheme = useRecoilValue(websiteThemeState);
   const [allMessages, setAllMessages] = useState<Message[]>([]);
+  const [newMessage, setNewMessage] = useState<Message | null>(null);
+  const [ws, setWs] = useState<WebSocket | null>(null);
 
   useEffect(() => {
-    setAllMessages([...initialMessages]);
-  }, [initialMessages]);
-
-  useEffect(() => {
-    setAllMessages((prevMessages) => {
-      const updatedMessages = [...prevMessages, ...newMessage];
-      if (updatedMessages.length > 50) {
-        updatedMessages.splice(0, updatedMessages.length - 50);
-      }
-      return updatedMessages;
-    });
+    if(newMessage) {
+      setAllMessages((prevMessages) => {
+        const updatedMessages = [...prevMessages, newMessage];
+        if (updatedMessages.length > 50) {
+          updatedMessages.splice(0, updatedMessages.length - 50);
+        }
+        return updatedMessages;
+      });
+    }
+    
   }, [newMessage]);
 
   const distributeMessagesIntoRows = (messages: Message[]) => {
@@ -144,6 +138,74 @@ const GlobalChat = ({
   };
 
   const rows = distributeMessagesIntoRows(allMessages);
+
+  const fetchMessages = async () => {
+    try {
+
+      const response = await axios.get(initial_chat_messages_url, {
+        params: {
+          method: 'get_messages',
+          room: 'public'  // Replace with the actual room name or parameter you need
+        }
+      });
+      // console.log(">>>>>>>>>>>>>>>>>>>>> response <<<<<<<<<<<<<<<<<<<<<<<", response)
+      const fetchedMessages = response.data.map((msg: any) => {
+        return {
+          _id: msg._id,
+          message: msg.text,
+          username: msg.username == "Unknown" || msg.username == "" ? msg.walletAddress : msg.username,
+          profilePic: msg.sender_pfp?.length ? msg.sender_pfp : `${random_profile_image_url}/${Math.floor(Math.random() * 50)}.jpg`,
+          timestamp: new Date(msg.timestamp).getTime(),
+          isEmpty: false
+        }
+      });
+
+      // console.log(">>>>>>>>>>>>>>>>>>>>> fetchedMessages <<<<<<<<<<<<<<<<<<<<<<<", fetchedMessages.reverse())
+
+      setAllMessages(fetchedMessages);
+      // setGridData(fetchedMessages.reverse());
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchMessages();
+
+    const socket = new WebSocket(websocket_url);
+
+    setWs(socket);
+
+    socket.onopen = () => {
+      console.log("WebSocket connection established");
+    };
+
+    socket.onmessage = (event) => {
+      // console.log(">>>>>>>>>>>>>>>>>>>>>>>>event<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+      const receivedMessage = JSON.parse(event.data);
+      console.log("chaos Received message:", receivedMessage);
+      const messageItem: Message = {
+        _id: receivedMessage._id || "",
+        message: receivedMessage.message,
+        username: receivedMessage.sender_username == "Unknown" || receivedMessage.sender_username == "" ? receivedMessage.sender_wallet_address || receivedMessage.walletAddress : receivedMessage.sender_username,
+        profilePic: receivedMessage.sender_pfp?.length ? receivedMessage.sender_pfp : `${random_profile_image_url}/${Math.floor(Math.random() * 50)}.jpg`
+      };
+
+      setNewMessage(messageItem);
+    };
+
+    socket.onclose = () => {
+      console.log("WebSocket connection closed");
+    };
+
+    socket.onerror = (error) => {
+      console.error("WebSocket error:", error);
+    };
+
+    return () => {
+      socket.close();
+    };
+  }, []);
 
   return (
     <div className="w-full flex flex-col justify-end h-full gap-[40px]">
