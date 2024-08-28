@@ -23,16 +23,11 @@ import Thread from "../buttons/Thread";
 
 import { useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey, Transaction, SystemProgram } from "@solana/web3.js";
-// import * as buffer from "buffer";
+import * as buffer from "buffer";
 import SkullButton from "../buttons/SkullButton";
 import TippedSuccessButton from "../buttons/TippedSuccessButton";
 import PendingButton from "../buttons/PendingButton";
-
-const rpc_endpoint = import.meta.env.VITE_RPC_URL;
-const connection = new Connection(rpc_endpoint);
-const coingecko_api_url = import.meta.env.VITE_COINGECKO_API_URL;
-const fee_account = import.meta.env.VITE_FEE_ACCOUNT;
-const to_account = import.meta.env.VITE_ADMIN_ACCOUNT;
+window.Buffer = buffer.Buffer;
 
 interface TipModalProps {
   open: boolean;
@@ -85,11 +80,14 @@ const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
   const tipOptionList = [10, 50, 100];
   const wallet = useWallet();
   const { publicKey, sendTransaction, connect, connected } = wallet;
+  const connection = new Connection(
+    "https://prettiest-alpha-layer.solana-mainnet.quiknode.pro/299c8791dd626fb1352a0fd06e92afe2b95aa3cc"
+  );
 
   const fetchSolPrice = async () => {
     try {
       const response = await axios.get(
-        coingecko_api_url
+        "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd"
       );
       return response.data.solana.usd;
     } catch (error) {
@@ -98,115 +96,90 @@ const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
     }
   };
 
-  // const handleTip = async () => {
-  //   if (!connected) {
-  //     console.log("Wallet not connected. Connecting now...");
-  //     await connect();
-  //     return;
-  //   }
-  //   if (!publicKey) {
-  //     console.error("Public key is not available. Ensure wallet is connected.");
-  //     return;
-  //   }
-
-  //   const solPrice = await fetchSolPrice();
-  //   const transferAmount = solAmount * LAMPORTS_PER_SOL;
-  //   // console.log("transferAmount", transferAmount, "solPrice", solPrice);
-  //   setTipStatus(
-  //     <>
-  //       <PendingButton /> Pending Approval
-  //     </>
-  //   );
-  //   setDismissStatus(null);
-
-  //   const toPubkey = new PublicKey(to_account);
-  //   const feePubkey = new PublicKey(fee_account);
-
-  //   const lamports = Math.round(transferAmount);
-  //   console.log(lamports);
-
-  //   try {
-  //     const balance = await connection.getBalance(publicKey);
-  //     console.log(balance);
-
-  //     const sendAmount = Math.round(lamports * 0.99);
-  //     const feeAmount = Math.round(lamports * 0.01);
-  //     console.log(feeAmount);
-
-  //     if (balance < lamports) {
-  //       console.log("Insufficient Balance");
-  //       setTipStatus(
-  //         <>
-  //           <SkullButton /> Insufficient Balance
-  //         </>
-  //       );
-  //       setDismissStatus("Dismiss");
-  //       return;
-  //     }
-
-  //     const transaction = new Transaction().add(
-  //       SystemProgram.transfer({
-  //         fromPubkey: publicKey,
-  //         toPubkey: toPubkey,
-  //         lamports: sendAmount,
-  //       }),
-  //       SystemProgram.transfer({
-  //         fromPubkey: publicKey,
-  //         toPubkey: feePubkey,
-  //         lamports: feeAmount,
-  //       })
-  //     );
-
-  //     // console.log("transaction", transaction);
-
-  //     const signature = await sendTransaction(transaction, connection);
-  //     // await connection.confirmTransaction(signature, "confirmed");
-
-  //     setTipStatus(
-  //       <>
-  //         <TippedSuccessButton /> Tipped Successfully
-  //       </>
-  //     );
-  //     setDismissStatus(null);
-  //   } catch (error) {
-  //     // console.error("Transaction failed", error);
-  //     setTipStatus(
-  //       <>
-  //         <SkullButton /> Insufficient Balance
-  //       </>
-  //     );
-  //     setDismissStatus("Dismiss");
-  //   }
-  // };
-
   const handleTip = async () => {
-    getTokenData("2kSmCB5PrswNvN5vrN4ayb2DnVbeFmNhX7QuHReeGKYy");
+    if (!connected) {
+      console.log("Wallet not connected. Connecting now...");
+      await connect();
+      return;
+    }
+    if (!publicKey) {
+      console.error("Public key is not available. Ensure wallet is connected.");
+      return;
+    }
+
+    const solPrice = await fetchSolPrice();
+    const transferAmount = solAmount * LAMPORTS_PER_SOL;
+    console.log("transferAmount", transferAmount, "solPrice", solPrice);
+    setTipStatus(
+      <>
+        <PendingButton /> Pending Approval
+      </>
+    );
+    setDismissStatus(null);
+
+    const toPubkey = new PublicKey(
+      "A4bvCVXn6p4TNB85jjckdYrDM2WgokhYTmSypQQ5T9Lv"
+    );
+    const feePubkey = new PublicKey(
+      "A4bvCVXn6p4TNB85jjckdYrDM2WgokhYTmSypQQ5T9Lv"
+    );
+
+    const lamports = Math.round(transferAmount);
+    console.log(lamports);
+
+    try {
+      const balance = await connection.getBalance(publicKey);
+      console.log(balance);
+
+      const sendAmount = Math.round(lamports * 0.99);
+      const feeAmount = Math.round(lamports * 0.01);
+      console.log(feeAmount);
+
+      if (balance < lamports) {
+        console.log("Insufficient Balance");
+        setTipStatus(
+          <>
+            <SkullButton /> Insufficient Balance
+          </>
+        );
+        setDismissStatus("Dismiss");
+        return;
+      }
+
+      const transaction = new Transaction().add(
+        SystemProgram.transfer({
+          fromPubkey: publicKey,
+          toPubkey: toPubkey,
+          lamports: sendAmount,
+        }),
+        SystemProgram.transfer({
+          fromPubkey: publicKey,
+          toPubkey: feePubkey,
+          lamports: feeAmount,
+        })
+      );
+
+      console.log("transaction", transaction);
+
+      const signature = await sendTransaction(transaction, connection);
+      await connection.confirmTransaction(signature, "confirmed");
+
+      setTipStatus(
+        <>
+          <TippedSuccessButton /> Tipped Successfully
+        </>
+      );
+      setDismissStatus(null);
+    } catch (error) {
+      console.error("Transaction failed", error);
+      setTipStatus(
+        <>
+          <SkullButton /> Insufficient Balance
+        </>
+      );
+      setDismissStatus("Dismiss");
+    }
   };
-
-  async function getTokenData(tokenAddress: any) {
-    // Get price, market cap, and volume from CoinGecko
-    const coingeckoResponse = await axios.get(`https://api.coingecko.com/api/v3/simple/token_price/solana?contract_addresses=${tokenAddress}&vs_currencies=usd`);
-    const price = coingeckoResponse.data[tokenAddress].usd;
-    console.log("coin price", coingeckoResponse);
-
-    // Get holders count, top 10 holders percentage, and other data from Solscan
-    const solscanResponse = await axios.get(`https://api.solscan.io/account/token?address=${tokenAddress}`);
-    const holdersCount = solscanResponse.data.holders.length;
-    const top10Holders = solscanResponse.data.holders.slice(0, 10);
-    const top10HoldersPercentage = top10Holders.reduce((sum: any, holder: any) => sum + holder.amount, 0) / solscanResponse.data.totalSupply * 100;
-
-    // Get liquidity and LP status (example from Raydium)
-    const raydiumResponse = await axios.get('https://api.raydium.io/v2/main/pairs');
-    const lpInfo = raydiumResponse.data.find((pair: { baseMint: any; quoteMint: any; })=> pair.baseMint === tokenAddress || pair.quoteMint === tokenAddress);
-
-    console.log(`Price: $${price}`);
-    console.log(`Holders Count: ${holdersCount}`);
-    console.log(`Top 10 Holders Percentage: ${top10HoldersPercentage.toFixed(2)}%`);
-    console.log(`Liquidity: ${lpInfo?.liquidity}`);
-    console.log(`Volume: ${lpInfo?.volume}`);
-    console.log(`Market Cap: ${price * solscanResponse.data.totalSupply}`);
-    // Add more fields as needed
-  }
 
   const handleAmountChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
@@ -398,9 +371,9 @@ const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
 
 const generateRandomCall = () => {
   const addresses = [
-    "FV56CmR7fhEyPkymKfmviKV48uPo51ti9kAxssQqTDLu",
-    "A1b2C3d4E5f6G7h8I9j0K1L2m3N4o5P6q7R8S9t0U1V2W3X4Y5Z6",
-    "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+    "FH6Ksp8AkTHvT7rfSzyHTiJM4JVDQBucr1JgkyQjpump",
+    "FH6Ksp8AkTHvT7rfSzyHTiJM4JVDQBucr1JgkyQjpump",
+    "FH6Ksp8AkTHvT7rfSzyHTiJM4JVDQBucr1JgkyQjpump",
   ];
   const messages = [
     "“Invested all my savings into this project, it’s the future!”",
@@ -408,16 +381,14 @@ const generateRandomCall = () => {
     "“Hoping this turns into something big, crossing fingers!”",
   ];
   const usernames = ["alpha_hoe", "beta_boss", "gamma_guru"];
-
+  const address= addresses[Math.floor(Math.random() * addresses.length)]
   return {
     id: generateRandomHex(),
-    address: addresses[Math.floor(Math.random() * addresses.length)],
+    address,
     message: messages[Math.floor(Math.random() * messages.length)],
     username: usernames[Math.floor(Math.random() * usernames.length)],
     timestamp: Date.now() + Math.floor(Math.random() * 600),
-    profilePic: `https://randomuser.me/api/portraits/men/${Math.floor(
-      Math.random() * 50
-    )}.jpg`,
+    profilePic: `https://dd.dexscreener.com/ds-data/tokens/solana/${address}.png`,
   };
 };
 
@@ -428,13 +399,13 @@ export default function AlphaChannel() {
   const [openModal, setOpenModal] = useState(false);
   const [callValue, setCallValue] = useState({});
 
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      setCalls((prevCalls) => [generateRandomCall(), ...prevCalls]);
-    }, 10000);
+  // useEffect(() => {
+  //   const intervalId = setInterval(() => {
+  //     setCalls((prevCalls) => [generateRandomCall(), ...prevCalls]);
+  //   }, 10000);
 
-    return () => clearInterval(intervalId);
-  }, []);
+  //   return () => clearInterval(intervalId);
+  // }, []);
 
   const handleDeleteItem = (item_id: string) => {
     setCalls((calls) => calls.filter((call) => call.id !== item_id));
@@ -562,7 +533,7 @@ export default function AlphaChannel() {
                 </Box>
               </Box>
             </Box>
-            <TokenCard />
+            <TokenCard mint={call.address} />
           </Box>
         ))}
       </Stack>
