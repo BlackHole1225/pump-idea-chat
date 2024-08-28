@@ -9,21 +9,26 @@ import {
   setTypedMessage,
   addNewMessage,
 } from "../../libs/redux/slices/chat-slice";
+import { setAlphaAccess } from "../../libs/redux/slices/user-profile-slice";
 import { motion, AnimatePresence } from "framer-motion";
 import { Close, Settings, Send } from "@mui/icons-material";
 import ChatSettings from "./ChatSettings";
 import AudioPlayerButton from "../AudioPlayerButton";
 import ChatTextArea from "./ChatTextArea";
 import { useWallet } from "@solana/wallet-adapter-react";
+import axios from "axios";
 
 const websocket_url = import.meta.env.VITE_WEBSOCKET_URL;
+const initial_chat_messages_url = import.meta.env.VITE_CHAT_SERVER_URL;
 
 const Footer = () => {
   const [ws, setWs] = useState<WebSocket | null>(null);
   const dispacth = useAppDispatch();
   const chatState = useAppSelector((state) => state.chat.state);
   const typedMessage = useAppSelector((state) => state.chat.typedMessage);
+  const alphaAccess = useAppSelector((state) => state.profile.alphaAccess);
   const updateChatState = (state: IChatStates) => dispacth(setChatState(state));
+  // const [alphaAccess, setAlphaAccess] = useState(false);
   const websiteTheme = useAppSelector((state) => state.theme.current.styles);
   const buttons = ["DEN", "PUMP.RAY", "ALPHA"];
   const dispatch = useAppDispatch();
@@ -37,6 +42,32 @@ const Footer = () => {
   };
   const wallet = useWallet();
 
+  const getAlpahAccessInfo = async () => {
+    try {
+      const response = await axios.get(initial_chat_messages_url, {
+        params: {
+          method: 'get_user_info',
+          walletAddress: wallet?.publicKey?.toString(),
+        }
+      });
+
+      if (response?.data?.alphaAccess) {
+        // setAlphaAccess(response?.data?.alphaAccess);
+        dispatch(setAlphaAccess(response?.data?.alphaAccess))
+      }
+      // console.log(">>>>>>>>>>>>>>>>>>>>> fetchedMessages <<<<<<<<<<<<<<<<<<<<<<<", response.data);
+
+      // setGridData(fetchedMessages.reverse().slice(0, totalSlots));
+      // setGridData(fetchedMessages.reverse());
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    }
+  };
+
+  useEffect(() => {
+    getAlpahAccessInfo();
+  });
+
   useEffect(() => {
     const socket = new WebSocket(websocket_url);
     setWs(socket);
@@ -47,7 +78,7 @@ const Footer = () => {
 
     socket.onmessage = (event) => {
       const message = JSON.parse(event.data);
-      console.log("Received message footer:", message);
+      console.log(">>>>>>>>>>>>>>>>>>Received message footer:<<<<<<<<<<<<<<<<<<<<<<<<", message);
       // dispatch(addNewMessage(message));
     };
 
@@ -64,7 +95,7 @@ const Footer = () => {
     };
   }, [dispatch]);
 
-  const handleSendMessage = useCallback(() => {
+  const handleSendMessage = () => {
     // console.log("test handle send message");
     if (ws && ws.readyState === WebSocket.OPEN) {
       const message = {
@@ -84,20 +115,28 @@ const Footer = () => {
       //   profilePic: "path/to/your/profilePic.jpg", // Replace with actual profile picture URL
       // }));
     }
-  }, [ws, typedMessage, chatState, dispatch]);
+  };
 
-  // const handleSendMessage11 = useCallback(() => {
-  //   if (ws && ws.readyState === WebSocket.OPEN) {
-  //     const message = {
-  //       text: typedMessage,
-  //       walletAddress: "Btvh9xDQ2VscyMLCczfDrq5ae9HSUhfkonZrb7rW3Y51", // Replace with actual user wallet address
-  //       room: chatState.toLowerCase(),
-  //       action: "sendMessage",
-  //     };
-  //     ws.send(JSON.stringify(message));
-  //     dispatch(setTypedMessage(""));
-  //   }
-  // }, [ws, typedMessage, chatState, dispatch]);
+  const handleAlphaSendMessage = () => {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      const message = {
+        text: typedMessage,
+        walletAddress: wallet.publicKey?.toString(), // Replace with actual user wallet address
+        room: chatState.toLowerCase(),
+        action: "sendMessage",
+      };
+      ws.send(JSON.stringify(message));
+      dispatch(setTypedMessage(""));
+
+      // Trigger the message to be added to the chat state
+      // dispatch(addNewMessage({
+      //   _id: Date.now().toString(), // Assuming the message ID can be a timestamp, replace with actual logic
+      //   message: typedMessage,
+      //   username: "Your Username", // Replace with the actual username from your state
+      //   profilePic: "path/to/your/profilePic.jpg", // Replace with actual profile picture URL
+      // }));
+    }
+  };
 
   const handlePlayAudio = useCallback(
     (state: boolean = true) => dispatch(setShouldPlayAudio(state)),
@@ -122,6 +161,7 @@ const Footer = () => {
               display="flex"
             >
               {chatState === "DEN" && !isChatSettingsOpen && <ChatTextArea handleSendMessage={handleSendMessage} />}
+              {chatState === "ALPHA" && alphaAccess && <ChatTextArea handleSendMessage={handleAlphaSendMessage} />}
 
               <Box className="w-full flex items-center">
                 <Box

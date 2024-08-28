@@ -123,7 +123,6 @@ const Chaos: React.FC = () => {
 
   const fetchMessages = async () => {
     try {
-
       const response = await axios.get(initial_chat_messages_url, {
         params: {
           method: 'get_messages',

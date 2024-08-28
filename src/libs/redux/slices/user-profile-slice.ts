@@ -6,6 +6,7 @@ const BASE_URI = import.meta.env.VITE_MESSENGER_API_URL;
 interface UserProfileState {
     userName: string;
     profilePic: string;
+    alphaAccess: boolean;
     loading: boolean;
     error: string | null;
 }
@@ -13,6 +14,7 @@ interface UserProfileState {
 const initialState: UserProfileState = {
     userName: '',
     profilePic: '',
+    alphaAccess: false,
     loading: false,
     error: null
 };
@@ -39,6 +41,9 @@ const userProfileSlice = createSlice({
         },
         setProfilePic(state, action: PayloadAction<string>) {
             state.profilePic = action.payload;
+        },
+        setAlphaAccess(state, action: PayloadAction<boolean>) {
+            state.alphaAccess = action.payload;
         }
     },
     extraReducers: (builder) => {
@@ -59,5 +64,5 @@ const userProfileSlice = createSlice({
     }
 });
 
-export const { setUserName, setProfilePic } = userProfileSlice.actions;
+export const { setUserName, setProfilePic, setAlphaAccess } = userProfileSlice.actions;
 export default userProfileSlice.reducer;

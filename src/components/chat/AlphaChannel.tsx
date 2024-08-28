@@ -27,7 +27,7 @@ import * as buffer from "buffer";
 import SkullButton from "../buttons/SkullButton";
 import TippedSuccessButton from "../buttons/TippedSuccessButton";
 import PendingButton from "../buttons/PendingButton";
-window.Buffer = buffer.Buffer;
+// window.Buffer = buffer.Buffer;
 
 interface TipModalProps {
   open: boolean;
@@ -36,6 +36,16 @@ interface TipModalProps {
   theme: any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   call: any;
+}
+
+interface Message {
+  _id: any;
+  user_id: string,
+  walletAddress: string;
+  username: string;
+  profilePic: string;
+  alphaAcess: Boolean;
+  timestamp: string;
 }
 
 const TipName = styled("div")`
@@ -63,6 +73,14 @@ const TipOptionInput = styled(Input)`
   font-family: "JetBrains Mono";
 `;
 
+const solana_rpc_endpoint = import.meta.env.VITE_RPC_URL;
+const coingecko_api_url = import.meta.env.VITE_COINGECKO_API_URL;
+const fee_account = import.meta.env.VITE_FEE_ACCOUNT;
+const admin_account = import.meta.env.VITE_ADMIN_ACCOUNT;
+const random_profile_image_url = import.meta.env.VITE_RANDOM_PROFILE_URL;
+const initial_chat_messages_url = import.meta.env.VITE_CHAT_SERVER_URL;
+const websocket_url = import.meta.env.VITE_WEBSOCKET_URL;
+
 // Modal Component
 const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
   const [amount, setAmount] = useState<number | string>("");
@@ -80,15 +98,11 @@ const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
   const tipOptionList = [10, 50, 100];
   const wallet = useWallet();
   const { publicKey, sendTransaction, connect, connected } = wallet;
-  const connection = new Connection(
-    "https://prettiest-alpha-layer.solana-mainnet.quiknode.pro/299c8791dd626fb1352a0fd06e92afe2b95aa3cc"
-  );
+  const connection = new Connection(solana_rpc_endpoint);
 
   const fetchSolPrice = async () => {
     try {
-      const response = await axios.get(
-        "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd"
-      );
+      const response = await axios.get(coingecko_api_url);
       return response.data.solana.usd;
     } catch (error) {
       console.error("Error fetching SOL price:", error);
@@ -117,12 +131,8 @@ const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
     );
     setDismissStatus(null);
 
-    const toPubkey = new PublicKey(
-      "A4bvCVXn6p4TNB85jjckdYrDM2WgokhYTmSypQQ5T9Lv"
-    );
-    const feePubkey = new PublicKey(
-      "A4bvCVXn6p4TNB85jjckdYrDM2WgokhYTmSypQQ5T9Lv"
-    );
+    const toPubkey = new PublicKey(fee_account);
+    const feePubkey = new PublicKey(admin_account);
 
     const lamports = Math.round(transferAmount);
     console.log(lamports);
@@ -162,7 +172,7 @@ const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
       console.log("transaction", transaction);
 
       const signature = await sendTransaction(transaction, connection);
-      await connection.confirmTransaction(signature, "confirmed");
+      // await connection.confirmTransaction(signature, "confirmed");
 
       setTipStatus(
         <>
@@ -191,6 +201,7 @@ const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
     }
 
     const solPrice = await fetchSolPrice();
+    console.log("sol price", solPrice);
     if (solPrice > 0) {
       const calculatedSolAmount = parseFloat(usdAmount) / solPrice;
       setAmount(usdAmount);
@@ -388,7 +399,7 @@ const generateRandomCall = () => {
     message: messages[Math.floor(Math.random() * messages.length)],
     username: usernames[Math.floor(Math.random() * usernames.length)],
     timestamp: Date.now() + Math.floor(Math.random() * 600),
-    profilePic: `https://randomuser.me/api/portraits/men/${Math.floor(
+    profilePic: `${random_profile_image_url}/${Math.floor(
       Math.random() * 50
     )}.jpg`,
   };
@@ -397,6 +408,7 @@ const generateRandomCall = () => {
 export default function AlphaChannel() {
   const theme = useAppSelector((state) => state.theme.current.styles);
   const [calls, setCalls] = useState([generateRandomCall()]);
+  const [ws, setWs] = useState<WebSocket | null>(null);
 
   const [openModal, setOpenModal] = useState(false);
   const [callValue, setCallValue] = useState({});
@@ -422,6 +434,76 @@ export default function AlphaChannel() {
   const handleCloseModal = () => {
     setOpenModal(false);
   };
+
+  const fetchMessages = async () => {
+    try {
+      const response = await axios.get(initial_chat_messages_url, {
+        params: {
+          method: 'get_messages',
+          room: 'alpha'  // Replace with the actual room name or parameter you need
+        }
+      });
+
+      const fetchedMessages = response.data.map((msg: any) => {
+        return {
+          _id: msg._id,
+          message: msg.text,
+          username: msg.username == "Unknown" || msg.username == "" ? msg.walletAddress : msg.walletAddress,
+          alphaAccess: msg.alphaAccess,
+          room: msg.room,
+          profilePic: msg.sender_pfp?.length ? msg.sender_pfp : `${random_profile_image_url}/${Math.floor(Math.random() * 50)}.jpg`,
+          timestamp: new Date(msg.timestamp).getTime(),
+        }
+      });
+
+      console.log(">>>>>>>>>>>>>>>>>>>>> fetchedMessages <<<<<<<<<<<<<<<<<<<<<<<", response.data)
+
+      // setGridData(fetchedMessages.reverse().slice(0, totalSlots));
+      // setGridData(fetchedMessages.reverse());
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchMessages();
+
+    const socket = new WebSocket(`${websocket_url}/?room='alpha'`);
+
+    setWs(socket);
+
+    socket.onopen = () => {
+      console.log("WebSocket connection established");
+    };
+
+    socket.onmessage = (event) => {
+      // console.log(">>>>>>>>>>>>>>>>>>>>>>>>event<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+      const receivedMessage = JSON.parse(event.data);
+      console.log("alpha Received message:", receivedMessage);
+      // const { marginClass, textClampClass, colSpanClass, rowSpanClass } = generateRandomStyles();
+      // const messageItem: Message = {
+      //   _id: receivedMessage._id || "",
+
+      //   username: receivedMessage.sender_username == "Unknown" || receivedMessage.sender_username == "" ? receivedMessage.sender_wallet_address || receivedMessage.walletAddress : receivedMessage.sender_username,
+      //   profilePic: receivedMessage.sender_pfp?.length ? receivedMessage.sender_pfp : `${random_profile_image_url}/${Math.floor(Math.random() * 50)}.jpg`,
+      //   isEmpty: false
+      // };
+
+      // updateGridWithNewMessage(messageItem);
+    };
+
+    socket.onclose = () => {
+      console.log("WebSocket connection closed");
+    };
+
+    socket.onerror = (error) => {
+      console.error("WebSocket error:", error);
+    };
+
+    return () => {
+      socket.close();
+    };
+  }, []);
 
   return (
     <Stack

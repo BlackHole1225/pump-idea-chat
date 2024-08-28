@@ -7,6 +7,7 @@ import MessageShowModal from "./MessageShowModal";
 import { Box, IconButton } from "@mui/material";
 
 import axios from "axios";
+import { walletAddressState } from "../../atoms/wallet";
 
 const random_profile_image_url = import.meta.env.VITE_RANDOM_PROFILE_URL;
 const initial_chat_messages_url = import.meta.env.VITE_CHAT_SERVER_URL;
@@ -143,7 +144,6 @@ const Focused = () => {
 
   const fetchMessages = async () => {
     try {
-
       const response = await axios.get(initial_chat_messages_url, {
         params: {
           method: 'get_messages',
