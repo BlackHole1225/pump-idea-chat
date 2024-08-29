@@ -532,13 +532,23 @@ export default function AlphaChannel() {
                   className="w-10 h-10 rounded-full"
                 />
                 <div className="flex flex-col gap-[5px] pl-[10px]">
-                  <p className="uppercase text-[14px]">{call.username}</p>
-                  <div className="flex items-center gap-2">
-                    <p className="uppercase text-[16px] text-ellipsis overflow-hidden">
-                      {call.address}
-                    </p>
-                    <CopyTextButton textToCopy={call.address} />
-                  </div>
+                  {alphaAccess ? (
+                    <p className="uppercase text-[14px]">{call.username}</p>
+                  ) : (
+                      call.username.length === 0 || call.username === "Unknown" ? (
+                      <p className="uppercase text-[14px]">{call.address.slice(0, 4) + "..." + call.address.slice(call.address.length - 4, call.address.length)}</p>
+                    ) : (
+                      <p className="uppercase text-[14px]">{call.username}</p>
+                    )
+                  )}
+                  {alphaAccess && (
+                    <div className="flex items-center gap-2">
+                      <p className="uppercase text-[16px] text-ellipsis overflow-hidden">
+                        {call.address}
+                      </p>
+                      <CopyTextButton textToCopy={call.address} />
+                    </div>
+                  )}
                 </div>
               </div>
               <Button
