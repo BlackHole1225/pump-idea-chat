@@ -76,8 +76,11 @@ const fee_account = import.meta.env.VITE_FEE_ACCOUNT;
 const admin_account = import.meta.env.VITE_ADMIN_ACCOUNT;
 const random_profile_image_url = import.meta.env.VITE_RANDOM_PROFILE_URL;
 const initial_chat_messages_url = import.meta.env.VITE_CHAT_SERVER_URL;
+const radym_api_price_url = import.meta.env.VITE_RAYDIUM_PRICE_API_URL;
 const websocket_url = import.meta.env.VITE_WEBSOCKET_URL;
 const connection = new Connection(solana_rpc_endpoint);
+const helius_api_url = import.meta.env.VITE_HELIUS_API_URL;
+const helius_api_key = import.meta.env.VITE_HELIUS_API_KEY;
 const room = 'alpha';
 
 const tokenMintAddress = new PublicKey('FS66v5XYtJAFo14LiPz5HT93EUMAHmYipCfQhLpU4ss8');
@@ -256,9 +259,8 @@ const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
           transform: "translate(-50%, -50%)",
           width: 480,
           bgcolor: "background.paper",
-          border: `2px solid ${
-            theme.bgColor == "#0000FF" ? theme.bgColor : theme.text_color
-          }`,
+          border: `2px solid ${theme.bgColor == "#0000FF" ? theme.bgColor : theme.text_color
+            }`,
           boxShadow: 24,
           p: 2,
           borderRadius: 3,
@@ -346,14 +348,14 @@ const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
             top: "12px",
             "&:hover": isTipBtnDisabled
               ? {
-                  bgcolor:
-                    theme.bgColor == "#0000FF"
-                      ? theme.bgColor
-                      : theme.text_color,
-                }
+                bgcolor:
+                  theme.bgColor == "#0000FF"
+                    ? theme.bgColor
+                    : theme.text_color,
+              }
               : {
-                  bgcolor: theme.tip_card?.btn_color,
-                },
+                bgcolor: theme.tip_card?.btn_color,
+              },
             cursor: isTipBtnDisabled ? "not-allowed" : "pointer",
             opacity: isTipBtnDisabled ? 0.5 : 1,
           }}
@@ -384,7 +386,11 @@ export default function AlphaChannel() {
   const theme = useAppSelector((state) => state.theme.current.styles);
   const [calls, setCalls] = useState<Message[]>([]);
   const alphaAccess = useAppSelector((state) => state.profile.alphaAccess);
-  
+  const [tokenMCap, setTokenMCap] = useState(0);
+  const [tokenHolders, setTokenHolders] = useState(0);
+  const [top10Percent, setTop10Percent] = useState(0);
+  const [mintVisibility, setMintVisibility] = useState(false);
+
   const [openModal, setOpenModal] = useState(false);
   const [callValue, setCallValue] = useState({});
 
@@ -402,59 +408,146 @@ export default function AlphaChannel() {
     setOpenModal(false);
   };
 
-  async function getTokenSupply() {
+  async function getTokenPrice(tokenId: string) {
     try {
-      const supply = await connection.getTokenSupply(tokenMintAddress);
-      console.log('Total Supply:', supply.value.uiAmount);
+      // CoinGecko API URL
+      const url = radym_api_price_url;
+
+      // Fetch the token price
+      const response = await fetch(url);
+      const data = await response.json();
+
+      // Display the price
+      const tokenPrice = data[tokenId];
+
+      if (tokenPrice) {
+        console.log(`Price of token ${tokenId}: $${tokenPrice}`);
+        return tokenPrice;
+      } else {
+        console.log('Token not found in Raydium price data.');
+        return 0;
+      }
     } catch (error) {
-      console.error('Error fetching token supply:', error);
+      console.error('Error fetching token price:', error);
+      return 0;
     }
   }
 
-  // Function to get number of holders by querying token accounts
-  async function getNumberOfHolders() {
+  async function getTokenMcap(tokenId: string) {
     try {
-      const accounts = await connection.getTokenLargestAccounts(tokenMintAddress);
-      console.log('Number of Holders:', accounts.value.length);
+      const supply = await connection.getTokenSupply(new PublicKey(tokenId));
+      const tokenPrice = await getTokenPrice(tokenId);
+      let mcap = 0;
+      if (supply?.value?.uiAmount) {
+        mcap = tokenPrice * supply?.value?.uiAmount;
+        setTokenMCap(Math.floor(mcap));
+      } else {
+        setTokenMCap(0);
+      }
     } catch (error) {
-      console.error('Error fetching number of holders:', error);
+      console.error('Error fetching token supply:', error);
+      setTokenMCap(0);
+    }
+  }
+
+  async function getTokenHoldersCountFromHelius(tokenId: string) {
+    try {
+      // Pagination logic
+      let page = 1;
+      // allOwners will store all the addresses that hold the token
+      let count = 0;
+
+      while (true) {
+        const response = await fetch(`${helius_api_url}/?api-key=${helius_api_key}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            jsonrpc: "2.0",
+            method: "getTokenAccounts",
+            id: "helius-test",
+            params: {
+              page: page,
+              limit: 1000,
+              displayOptions: {},
+              //mint address for the token we are interested in
+              mint: tokenId,
+            },
+          }),
+        });
+        const data = await response.json();
+        // Pagination logic. 
+        if (!data.result || data.result.token_accounts.length === 0) {
+          // console.log(`No more results. Total pages: ${page - 1}`);
+          break;
+        }
+        // console.log(`Processing results from page ${page}`);
+        // Adding unique owners to a list of token owners. 
+        count += data.result.token_accounts.length;
+        page++;
+      }
+
+      // console.log("Number of holders", count);
+      setTokenHolders(count);
+
+    } catch (error) {
+      console.error('Error fetching token holders count from Helius API:', error);
     }
   }
 
   // Function to get top 10 holders
-  async function getTop10Holders() {
+  async function getTop10HoldersPercent(tokenId: string) {
     try {
-      const largestAccounts = await connection.getTokenLargestAccounts(tokenMintAddress);
-      console.log('Top 10 Holders:');
+      const supply = await connection.getTokenSupply(new PublicKey(tokenId));
+      const largestAccounts = await connection.getTokenLargestAccounts(new PublicKey(tokenId));
+      let holdersAmount = 0;
       largestAccounts.value.slice(0, 10).forEach((account, index) => {
-        console.log(`Rank ${index + 1}:`, account.address.toBase58(), 'Balance:', account.uiAmount);
+        // console.log(`Rank ${index + 1}:`, account.address.toBase58(), 'Balance:', account.uiAmount);
+        if (account?.uiAmount) {
+          holdersAmount += account?.uiAmount;
+        }
       });
+      if (supply?.value?.uiAmount && supply?.value?.uiAmount !== 0) {
+        const percent = holdersAmount / supply?.value?.uiAmount * 100;
+        // console.log("Top10Holders percent", percent);
+        setTop10Percent(Math.floor(percent));
+      } else {
+        setTop10Percent(0);
+      }
     } catch (error) {
       console.error('Error fetching top 10 holders:', error);
     }
   }
 
   // Function to fetch token's mint visibility (if the mint exists)
-  async function checkMintVisibility() {
+  async function checkMintVisibility(tokenId: string) {
     try {
-      const mintInfo = await connection.getParsedAccountInfo(tokenMintAddress);
+      const mintInfo = await connection.getParsedAccountInfo(new PublicKey(tokenId));
       if (mintInfo.value !== null) {
-        console.log('Mint is visible:', mintInfo.value);
+        // console.log('Mint is visible');
+        setMintVisibility(true);
       } else {
-        console.log('Mint is not visible or does not exist');
+        // console.log('Mint is not visible or does not exist');
+        setMintVisibility(false);
       }
     } catch (error) {
-      console.error('Error checking mint visibility:', error);
+      // console.error('Error checking mint visibility:', error);
+      setMintVisibility(false);
     }
   }
 
+  const getTokenInfo = async (tokenId: string) => {
+    getTokenMcap(tokenMintAddress.toString());           // Fetch total supply of the token
+    getTokenHoldersCountFromHelius(tokenMintAddress.toString());       // Fetch number of holders
+    getTop10HoldersPercent(tokenMintAddress.toString());          // Fetch top 10 holders
+    checkMintVisibility(tokenMintAddress.toString());      // Check mint visibility
+  }
+
   // Example usage
-  (async () => {
-    await getTokenSupply();           // Fetch total supply of the token
-    await getNumberOfHolders();       // Fetch number of holders
-    await getTop10Holders();          // Fetch top 10 holders
-    await checkMintVisibility();      // Check mint visibility
-  })();
+  useEffect(() => {
+    getTokenInfo(tokenMintAddress.toString());
+  }, []);
 
   const fetchMessages = async () => {
     try {
@@ -465,7 +558,7 @@ export default function AlphaChannel() {
         },
       });
 
-      console.log("data", response.data);
+      // console.log("data", response.data);
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const fetchedMessages = response.data.map((msg: any) => {
@@ -477,8 +570,8 @@ export default function AlphaChannel() {
           profilePic: msg.sender_pfp?.length
             ? msg.sender_pfp
             : `${random_profile_image_url}/${Math.floor(
-                Math.random() * 50
-              )}.jpg`,
+              Math.random() * 50
+            )}.jpg`,
           timestamp: new Date(msg.timestamp).getTime(),
         };
       });
@@ -506,7 +599,7 @@ export default function AlphaChannel() {
     socket.onmessage = (event) => {
       // console.log(">>>>>>>>>>>>>>>>>>>>>>>>event<<<<<<<<<<<<<<<<<<<<<<<<<<<");
       const receivedMessage = JSON.parse(event.data);
-      console.log("alpha Received message:", receivedMessage);
+      // console.log("alpha Received message:", receivedMessage);
 
       const message = {
         id: receivedMessage._id,
@@ -614,11 +707,10 @@ export default function AlphaChannel() {
               <Button
                 onClick={() => handleTipClick(call)} // This now opens the Tip modal
                 style={{
-                  border: `1px solid ${
-                    theme.bgColor == "#0000FF"
-                      ? theme.text_color
-                      : theme.text_color
-                  }`,
+                  border: `1px solid ${theme.bgColor == "#0000FF"
+                    ? theme.text_color
+                    : theme.text_color
+                    }`,
                   left: "0px",
                   width: "80px",
                   fontFamily: "JetBrains mono",
@@ -665,7 +757,7 @@ export default function AlphaChannel() {
                 </Box>
               </Box>
             </Box>
-            <TokenCard mint="10" />
+            <TokenCard mint="10" mcap={tokenMCap} holders={tokenHolders} top10={top10Percent} mint_flag={mintVisibility}/>
           </Box>
         ))}
       </Stack>

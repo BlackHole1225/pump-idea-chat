@@ -29,9 +29,13 @@ const StatBox = styled(Box)({
 
 interface TokenCardProps {
   mint: string;
+  mcap: number,
+  holders: number,
+  top10: number,
+  mint_flag: boolean
 }
 
-const TokenCard: FC<TokenCardProps> = ({ mint }) => {
+const TokenCard: FC<TokenCardProps> = ({ mint, mcap, holders, top10, mint_flag }) => {
   const theme = useAppSelector((state) => state.theme.current.styles);
 
   return (
@@ -83,11 +87,11 @@ const TokenCard: FC<TokenCardProps> = ({ mint }) => {
       <div className="flex justify-between py-2">
         <StatBox>
           <p className="title">MCAP</p>
-          <p className="value">$18.9M</p>
+          <p className="value">${mcap}</p>
         </StatBox>
         <StatBox>
           <p className="title">HOLDERS</p>
-          <p className="value">2,263</p>
+          <p className="value">{holders}</p>
         </StatBox>
         <StatBox>
           <p className="title">VOLUME</p>
@@ -103,12 +107,12 @@ const TokenCard: FC<TokenCardProps> = ({ mint }) => {
         </StatBox>
         <StatBox>
           <p className="title">TOP 10</p>
-          <p className="value">7%</p>
+          <p className="value">{top10}%</p>
         </StatBox>
 
         <StatBox>
           <p className="title">MINT</p>
-          <p className="value">Disabled</p>
+          <p className="value">{mint_flag? "Enabled" : "Disabled"}</p>
         </StatBox>
 
         <StatBox>
