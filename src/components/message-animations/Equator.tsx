@@ -115,7 +115,7 @@ const GlobalChat = () => {
   const [ws, setWs] = useState<WebSocket | null>(null);
 
   useEffect(() => {
-    if(newMessage) {
+    if (newMessage) {
       setAllMessages((prevMessages) => {
         const updatedMessages = [...prevMessages, newMessage];
         if (updatedMessages.length > 50) {
@@ -124,7 +124,6 @@ const GlobalChat = () => {
         return updatedMessages;
       });
     }
-    
   }, [newMessage]);
 
   const distributeMessagesIntoRows = (messages: Message[]) => {
@@ -141,23 +140,29 @@ const GlobalChat = () => {
 
   const fetchMessages = async () => {
     try {
-
       const response = await axios.get(initial_chat_messages_url, {
         params: {
-          method: 'get_messages',
-          room: 'public'  // Replace with the actual room name or parameter you need
-        }
+          method: "get_messages",
+          room: "public", // Replace with the actual room name or parameter you need
+        },
       });
       // console.log(">>>>>>>>>>>>>>>>>>>>> response <<<<<<<<<<<<<<<<<<<<<<<", response)
       const fetchedMessages = response.data.map((msg: any) => {
         return {
           _id: msg._id,
           message: msg.text,
-          username: msg.username == "Unknown" || msg.username == "" ? msg.walletAddress : msg.username,
-          profilePic: msg.sender_pfp?.length ? msg.sender_pfp : `${random_profile_image_url}/${Math.floor(Math.random() * 50)}.jpg`,
+          username:
+            msg.username == "Unknown" || msg.username == ""
+              ? msg.walletAddress
+              : msg.username,
+          profilePic: msg.sender_pfp?.length
+            ? msg.sender_pfp
+            : `${random_profile_image_url}/${Math.floor(
+                Math.random() * 50
+              )}.jpg`,
           timestamp: new Date(msg.timestamp).getTime(),
-          isEmpty: false
-        }
+          isEmpty: false,
+        };
       });
 
       // console.log(">>>>>>>>>>>>>>>>>>>>> fetchedMessages <<<<<<<<<<<<<<<<<<<<<<<", fetchedMessages.reverse())
@@ -165,7 +170,7 @@ const GlobalChat = () => {
       setAllMessages(fetchedMessages);
       // setGridData(fetchedMessages.reverse());
     } catch (error) {
-      console.error('Error fetching messages:', error);
+      console.error("Error fetching messages:", error);
     }
   };
 
@@ -187,8 +192,15 @@ const GlobalChat = () => {
       const messageItem: Message = {
         _id: receivedMessage._id || "",
         message: receivedMessage.message,
-        username: receivedMessage.sender_username == "Unknown" || receivedMessage.sender_username == "" ? receivedMessage.sender_wallet_address || receivedMessage.walletAddress : receivedMessage.sender_username,
-        profilePic: receivedMessage.sender_pfp?.length ? receivedMessage.sender_pfp : `${random_profile_image_url}/${Math.floor(Math.random() * 50)}.jpg`
+        username:
+          receivedMessage.sender_username == "Unknown" ||
+          receivedMessage.sender_username == ""
+            ? receivedMessage.sender_wallet_address ||
+              receivedMessage.walletAddress
+            : receivedMessage.sender_username,
+        profilePic: receivedMessage.sender_pfp?.length
+          ? receivedMessage.sender_pfp
+          : `${random_profile_image_url}/${Math.floor(Math.random() * 50)}.jpg`,
       };
 
       setNewMessage(messageItem);

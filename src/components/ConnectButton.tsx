@@ -21,8 +21,8 @@ export const SolanaConnect: React.FC = () => {
     }
     try {
       const response = await axios.post(server_url, {
-        method: 'register',
-        walletAddress: publicKey.toString(),  // Sending the wallet address
+        method: "register",
+        walletAddress: publicKey.toString(), // Sending the wallet address
       });
       if (response.data.success) {
         navigate("/chat");

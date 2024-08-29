@@ -13,7 +13,6 @@ import axios from "axios";
 import { LAMPORTS_PER_SOL, Connection } from "@solana/web3.js";
 
 import { useAppSelector } from "../../libs/redux/hooks";
-import { generateRandomHex } from "../../utils";
 
 import CopyTextButton from "../buttons/CopyTextButton";
 import TokenCard from "./TokenCard";
@@ -23,7 +22,6 @@ import Thread from "../buttons/Thread";
 
 import { useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey, Transaction, SystemProgram } from "@solana/web3.js";
-import * as buffer from "buffer";
 import SkullButton from "../buttons/SkullButton";
 import TippedSuccessButton from "../buttons/TippedSuccessButton";
 import PendingButton from "../buttons/PendingButton";
@@ -38,12 +36,13 @@ interface TipModalProps {
 }
 
 interface Message {
-  id: any,
-  message: string,
-  username: string,
-  address: string,
-  profilePic: string,
-  timestamp: Number,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  id: any;
+  message: string;
+  username: string;
+  address: string;
+  profilePic: string;
+  timestamp: number;
 }
 
 const TipName = styled("div")`
@@ -173,8 +172,7 @@ const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
 
       console.log("transaction", transaction);
 
-      const signature = await sendTransaction(transaction, connection);
-      // await connection.confirmTransaction(signature, "confirmed");
+      await sendTransaction(transaction, connection);
 
       setTipStatus(
         <>
@@ -258,8 +256,9 @@ const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
           transform: "translate(-50%, -50%)",
           width: 480,
           bgcolor: "background.paper",
-          border: `2px solid ${theme.bgColor == "#0000FF" ? theme.bgColor : theme.text_color
-            }`,
+          border: `2px solid ${
+            theme.bgColor == "#0000FF" ? theme.bgColor : theme.text_color
+          }`,
           boxShadow: 24,
           p: 2,
           borderRadius: 3,
@@ -347,14 +346,14 @@ const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
             top: "12px",
             "&:hover": isTipBtnDisabled
               ? {
-                bgcolor:
-                  theme.bgColor == "#0000FF"
-                    ? theme.bgColor
-                    : theme.text_color,
-              }
+                  bgcolor:
+                    theme.bgColor == "#0000FF"
+                      ? theme.bgColor
+                      : theme.text_color,
+                }
               : {
-                bgcolor: theme.tip_card?.btn_color,
-              },
+                  bgcolor: theme.tip_card?.btn_color,
+                },
             cursor: isTipBtnDisabled ? "not-allowed" : "pointer",
             opacity: isTipBtnDisabled ? 0.5 : 1,
           }}
@@ -384,19 +383,10 @@ const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
 export default function AlphaChannel() {
   const theme = useAppSelector((state) => state.theme.current.styles);
   const [calls, setCalls] = useState<Message[]>([]);
-  const [ws, setWs] = useState<WebSocket | null>(null);
   const alphaAccess = useAppSelector((state) => state.profile.alphaAccess);
   
   const [openModal, setOpenModal] = useState(false);
   const [callValue, setCallValue] = useState({});
-
-  // useEffect(() => {
-  //   const intervalId = setInterval(() => {
-  //     setCalls((prevCalls) => [generateRandomCall(), ...prevCalls]);
-  //   }, 10000);
-
-  //   return () => clearInterval(intervalId);
-  // }, []);
 
   const handleDeleteItem = (item_id: string) => {
     setCalls((calls) => calls.filter((call) => call.id !== item_id));
@@ -470,22 +460,27 @@ export default function AlphaChannel() {
     try {
       const response = await axios.get(initial_chat_messages_url, {
         params: {
-          method: 'get_messages',
-          room: 'alpha'  // Replace with the actual room name or parameter you need
-        }
+          method: "get_messages",
+          room: "alpha", // Replace with the actual room name or parameter you need
+        },
       });
 
       console.log("data", response.data);
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const fetchedMessages = response.data.map((msg: any) => {
         return {
           id: msg._id,
           message: msg.text,
           username: msg.username,
           address: msg.walletAddress,
-          profilePic: msg.sender_pfp?.length ? msg.sender_pfp : `${random_profile_image_url}/${Math.floor(Math.random() * 50)}.jpg`,
+          profilePic: msg.sender_pfp?.length
+            ? msg.sender_pfp
+            : `${random_profile_image_url}/${Math.floor(
+                Math.random() * 50
+              )}.jpg`,
           timestamp: new Date(msg.timestamp).getTime(),
-        }
+        };
       });
 
       // console.log(">>>>>>>>>>>>>>>>>>>>> fetchedMessages <<<<<<<<<<<<<<<<<<<<<<<", fetchedMessages)
@@ -493,16 +488,16 @@ export default function AlphaChannel() {
       // setGridData(fetchedMessages.reverse().slice(0, totalSlots));
       // setGridData(fetchedMessages.reverse());
     } catch (error) {
-      console.error('Error fetching messages:', error);
+      console.error("Error fetching messages:", error);
     }
   };
 
   useEffect(() => {
     fetchMessages();
 
-    const socket = new WebSocket(`${websocket_url}?room=${encodeURIComponent(room)}`);
-
-    setWs(socket);
+    const socket = new WebSocket(
+      `${websocket_url}?room=${encodeURIComponent(room)}`
+    );
 
     socket.onopen = () => {
       console.log("WebSocket connection established");
@@ -518,9 +513,11 @@ export default function AlphaChannel() {
         message: receivedMessage.message,
         username: receivedMessage.sender_username,
         address: receivedMessage.sender_wallet_address,
-        profilePic: receivedMessage.sender_pfp?.length ? receivedMessage.sender_pfp : `${random_profile_image_url}/${Math.floor(Math.random() * 50)}.jpg`,
+        profilePic: receivedMessage.sender_pfp?.length
+          ? receivedMessage.sender_pfp
+          : `${random_profile_image_url}/${Math.floor(Math.random() * 50)}.jpg`,
         timestamp: new Date(receivedMessage.timestamp).getTime(),
-      }
+      };
 
       setCalls((prevCalls) => [message, ...prevCalls]);
     };
@@ -591,12 +588,18 @@ export default function AlphaChannel() {
                 <div className="flex flex-col gap-[5px] pl-[10px]">
                   {alphaAccess ? (
                     <p className="uppercase text-[14px]">{call.username}</p>
+                  ) : call.username.length === 0 ||
+                    call.username === "Unknown" ? (
+                    <p className="uppercase text-[14px]">
+                      {call.address.slice(0, 4) +
+                        "..." +
+                        call.address.slice(
+                          call.address.length - 4,
+                          call.address.length
+                        )}
+                    </p>
                   ) : (
-                      call.username.length === 0 || call.username === "Unknown" ? (
-                      <p className="uppercase text-[14px]">{call.address.slice(0, 4) + "..." + call.address.slice(call.address.length - 4, call.address.length)}</p>
-                    ) : (
-                      <p className="uppercase text-[14px]">{call.username}</p>
-                    )
+                    <p className="uppercase text-[14px]">{call.username}</p>
                   )}
                   {alphaAccess && (
                     <div className="flex items-center gap-2">
@@ -611,10 +614,11 @@ export default function AlphaChannel() {
               <Button
                 onClick={() => handleTipClick(call)} // This now opens the Tip modal
                 style={{
-                  border: `1px solid ${theme.bgColor == "#0000FF"
-                    ? theme.text_color
-                    : theme.text_color
-                    }`,
+                  border: `1px solid ${
+                    theme.bgColor == "#0000FF"
+                      ? theme.text_color
+                      : theme.text_color
+                  }`,
                   left: "0px",
                   width: "80px",
                   fontFamily: "JetBrains mono",
@@ -661,7 +665,7 @@ export default function AlphaChannel() {
                 </Box>
               </Box>
             </Box>
-            <TokenCard />
+            <TokenCard mint="10" />
           </Box>
         ))}
       </Stack>
