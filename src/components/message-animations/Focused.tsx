@@ -20,10 +20,10 @@ interface Message {
 }
 
 const MessageComponent: React.FC<Message> = (msg) => {
-  const websiteTheme = useAppSelector(state => state.theme.current.styles);
+  const websiteTheme = useAppSelector((state) => state.theme.current.styles);
   const [messageModal, setMessageModal] = useState({
     isOpen: false,
-    message: {} as any
+    message: {} as any,
   });
 
   const formatMessage = (text: string) => {
@@ -45,7 +45,12 @@ const MessageComponent: React.FC<Message> = (msg) => {
       exit={{ opacity: 0, y: -50 }}
       transition={{ type: "spring", stiffness: 100, damping: 20 }}
     >
-      <MessageShowModal {...messageModal} onRequestClose={() => setMessageModal({ isOpen: false, message: {} as any })} />
+      <MessageShowModal
+        {...messageModal}
+        onRequestClose={() =>
+          setMessageModal({ isOpen: false, message: {} as any })
+        }
+      />
       <div className="hidden lg:flex gap-2 lg:gap-5 xl:gap-10 items-center mt-2 lg:mt-5 xl:mt-5">
         <div className="flex items-center gap-[10px] w-[30%] lg:w-[20%] justify-end">
           <p
@@ -59,32 +64,55 @@ const MessageComponent: React.FC<Message> = (msg) => {
           >
             {msg.username}
           </p>
-          <div className="rounded-full w-7 h-7 overflow-hidden" style={{ marginTop: "3px" }}>
-            <IconButton sx={{ padding: 0 }} onClick={() => {
-              setMessageModal({
-                isOpen: true,
-                message: msg
-              })
-            }}>
-              <img src={msg.profilePic} alt={msg.username} className="w-full h-full rounded-full" />
+          <div
+            className="rounded-full w-7 h-7 overflow-hidden"
+            style={{ marginTop: "3px" }}
+          >
+            <IconButton
+              sx={{ padding: 0 }}
+              onClick={() => {
+                setMessageModal({
+                  isOpen: true,
+                  message: msg,
+                });
+              }}
+            >
+              <img
+                src={msg.profilePic}
+                alt={msg.username}
+                className="w-full h-full rounded-full"
+              />
             </IconButton>
           </div>
         </div>
         <div className="w-[70%] lg:w-[60%]">
-          <p className="text-[14px] lg:text-[18px] xl:text-[20px] break-all font-mono" style={{ fontFamily: "JetBrains Mono" }}>
+          <p
+            className="text-[14px] lg:text-[18px] xl:text-[20px] break-all font-mono"
+            style={{ fontFamily: "JetBrains Mono" }}
+          >
             {msg.message.length > 300 ? msg.message.slice(0, 300) : msg.message}
           </p>
         </div>
       </div>
       <div className="lg:hidden flex gap-[10px] items-center">
-        <div className="rounded-full w-7 h-7 overflow-hidden" style={{ marginTop: "3px" }}>
-          <IconButton sx={{ padding: 0 }} onClick={() => {
-            setMessageModal({
-              isOpen: true,
-              message: msg
-            })
-          }}>
-            <img src={msg.profilePic} alt={msg.username} className="w-full h-full rounded-full" />
+        <div
+          className="rounded-full w-7 h-7 overflow-hidden"
+          style={{ marginTop: "3px" }}
+        >
+          <IconButton
+            sx={{ padding: 0 }}
+            onClick={() => {
+              setMessageModal({
+                isOpen: true,
+                message: msg,
+              });
+            }}
+          >
+            <img
+              src={msg.profilePic}
+              alt={msg.username}
+              className="w-full h-full rounded-full"
+            />
           </IconButton>
         </div>
         <div>
@@ -146,27 +174,34 @@ const Focused = () => {
     try {
       const response = await axios.get(initial_chat_messages_url, {
         params: {
-          method: 'get_messages',
-          room: 'public'  // Replace with the actual room name or parameter you need
-        }
+          method: "get_messages",
+          room: "public", // Replace with the actual room name or parameter you need
+        },
       });
       // console.log(">>>>>>>>>>>>>>>>>>>>> response <<<<<<<<<<<<<<<<<<<<<<<", response)
       const fetchedMessages = response.data.map((msg: any) => {
         return {
           _id: msg._id,
           message: msg.text,
-          username: msg.username == "Unknown" || msg.username == "" ? msg.walletAddress : msg.username,
-          profilePic: msg.sender_pfp?.length ? msg.sender_pfp : `${random_profile_image_url}/${Math.floor(Math.random() * 50)}.jpg`,
+          username:
+            msg.username == "Unknown" || msg.username == ""
+              ? msg.walletAddress
+              : msg.username,
+          profilePic: msg.sender_pfp?.length
+            ? msg.sender_pfp
+            : `${random_profile_image_url}/${Math.floor(
+                Math.random() * 50
+              )}.jpg`,
           timestamp: new Date(msg.timestamp).getTime(),
-          isEmpty: false
-        }
+          isEmpty: false,
+        };
       });
 
       // console.log(">>>>>>>>>>>>>>>>>>>>> fetchedMessages <<<<<<<<<<<<<<<<<<<<<<<", fetchedMessages.reverse())
       setAllMessages(fetchedMessages.reverse());
       // setGridData(fetchedMessages.reverse());
     } catch (error) {
-      console.error('Error fetching messages:', error);
+      console.error("Error fetching messages:", error);
     }
   };
 
@@ -187,8 +222,15 @@ const Focused = () => {
       console.log("focussed Received message:", receivedMessage);
       const messageItem: Message = {
         message: receivedMessage.message,
-        username: receivedMessage.sender_username == "Unknown" || receivedMessage.sender_username == "" ? receivedMessage.sender_wallet_address || receivedMessage.walletAddress : receivedMessage.sender_username,
-        profilePic: receivedMessage.sender_pfp?.length ? receivedMessage.sender_pfp : `${random_profile_image_url}/${Math.floor(Math.random() * 50)}.jpg`
+        username:
+          receivedMessage.sender_username == "Unknown" ||
+          receivedMessage.sender_username == ""
+            ? receivedMessage.sender_wallet_address ||
+              receivedMessage.walletAddress
+            : receivedMessage.sender_username,
+        profilePic: receivedMessage.sender_pfp?.length
+          ? receivedMessage.sender_pfp
+          : `${random_profile_image_url}/${Math.floor(Math.random() * 50)}.jpg`,
       };
 
       setAllMessages((prevMessages) => {
@@ -211,11 +253,11 @@ const Focused = () => {
   }, []);
 
   const scrollToBottom = () => {
-    const scrollHeight = messagesEndRef.current?.scrollHeight
+    const scrollHeight = messagesEndRef.current?.scrollHeight;
     messagesEndRef.current?.scrollTo({
       top: scrollHeight,
-      behavior: 'smooth'
-    })
+      behavior: "smooth",
+    });
   };
 
   const formatMessage = (text: string) => {
@@ -232,7 +274,11 @@ const Focused = () => {
   };
 
   return (
-    <Box className="relative overflow-y-auto w-full no-scrollbar h-full" flexGrow='1' ref={messagesEndRef}>
+    <Box
+      className="relative overflow-y-auto w-full no-scrollbar h-full"
+      flexGrow="1"
+      ref={messagesEndRef}
+    >
       <div className="w-[90%] lg:w-[80%] mx-auto flex flex-col gap-[15px] lg:gap-[20px] relative">
         {modalMessage && (
           <MessageModal
@@ -258,7 +304,10 @@ const Focused = () => {
                   >
                     {msg.username}
                   </p>
-                  <div className="rounded-full w-7 h-7 overflow-hidden flex-shrink-0 my-100" style={{ marginTop: "3px" }}>
+                  <div
+                    className="rounded-full w-7 h-7 overflow-hidden flex-shrink-0 my-100"
+                    style={{ marginTop: "3px" }}
+                  >
                     <img
                       src={msg.profilePic}
                       className="object-cover w-full h-full rounded-full"
@@ -266,13 +315,19 @@ const Focused = () => {
                   </div>
                 </div>
                 <div className="w-[70%] lg:w-[60%]">
-                  <p className="text-[14px] lg:text-[18px] xl:text-[20px] font-mono break-all" style={{ fontFamily: "JetBrains Mono" }}>
+                  <p
+                    className="text-[14px] lg:text-[18px] xl:text-[20px] font-mono break-all"
+                    style={{ fontFamily: "JetBrains Mono" }}
+                  >
                     {msg.message}
                   </p>
                 </div>
               </div>
               <div className="lg:hidden flex gap-[10px] items-center">
-                <div className="rounded-full w-7 h-7 overflow-hidden flex-shrink-0" style={{ marginTop: "3px" }}>
+                <div
+                  className="rounded-full w-7 h-7 overflow-hidden flex-shrink-0"
+                  style={{ marginTop: "3px" }}
+                >
                   <img
                     src={msg.profilePic}
                     className="object-cover w-full h-full rounded-full"

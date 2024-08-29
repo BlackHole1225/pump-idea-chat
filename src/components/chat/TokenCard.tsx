@@ -1,4 +1,4 @@
-import React from "react";
+import React, { FC } from "react";
 import { Box, Button, Avatar } from "@mui/material";
 import { styled } from "@mui/system";
 import { useAppSelector } from "../../libs/redux/hooks";
@@ -27,7 +27,11 @@ const StatBox = styled(Box)({
   },
 });
 
-const TokenCard = () => {
+interface TokenCardProps {
+  mint: string;
+}
+
+const TokenCard: FC<TokenCardProps> = ({ mint }) => {
   const theme = useAppSelector((state) => state.theme.current.styles);
 
   return (
@@ -43,7 +47,7 @@ const TokenCard = () => {
       <div className="flex justify-between pb-2">
         <div className="flex items-center">
           <Avatar
-            src="https://example.com/avatar.jpg" // Replace with the actual image URL
+            src={`https://dd.dexscreener.com/ds-data/tokens/solana/${mint}.png`} // Replace with the actual image URL
             alt="Frog"
             sx={{ width: 56, height: 56 }}
           />

@@ -7,10 +7,10 @@ import { useCallback, useRef } from "react";
 import messageAudio from "../../assets/msg.mp3";
 
 interface ChatTextAreaProps {
-  handleSendMessage: Function
+  handleSendMessage: Function;
 }
 
-const ChatTextArea: React.FC<ChatTextAreaProps> = ({handleSendMessage}) => {
+const ChatTextArea: React.FC<ChatTextAreaProps> = ({ handleSendMessage }) => {
   const theme = useAppSelector((state) => state.theme.current.styles);
   const typedMessage = useAppSelector((state) => state.chat.typedMessage);
   const dispatch = useAppDispatch();
@@ -111,6 +111,6 @@ const ChatTextArea: React.FC<ChatTextAreaProps> = ({handleSendMessage}) => {
       </motion.div>
     </Box>
   );
-}
+};
 
 export default ChatTextArea;

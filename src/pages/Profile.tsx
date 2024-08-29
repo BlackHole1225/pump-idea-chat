@@ -30,13 +30,10 @@ const Profile = () => {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const response = await axios.post(
-          BASE_URI,
-          {
-            method: "register",
-            walletAddress: wallet.publicKey?.toString(), // Sending the wallet address
-          }
-        );
+        const response = await axios.post(BASE_URI, {
+          method: "register",
+          walletAddress: wallet.publicKey?.toString(), // Sending the wallet address
+        });
 
         if (response.data) {
           if (response.data.user) {
@@ -142,7 +139,7 @@ const Profile = () => {
     }
   }, [userName]);
 
-  const renderProfilePic = () => {
+  const renderProfilePic = useMemo(() => {
     if (profilePic instanceof File) {
       try {
         return URL.createObjectURL(profilePic);
@@ -152,7 +149,7 @@ const Profile = () => {
     } else {
       return profilePicFromS3 || "";
     }
-  };
+  }, [profilePic, profilePicFromS3]);
 
   const handleSuccessClose = () => {
     setShowSuccessMessage(false);
@@ -180,12 +177,20 @@ const Profile = () => {
                 className="relative group border h-[100px] w-[100px] lg:h-[200px] lg:w-[200px] rounded-[100%] flex items-center justify-center"
                 style={{ borderColor: websiteTheme.text_color }}
               >
-                <div className={`rounded-full h-full w-full overflow-hidden`}>
-                  <img
-                    alt=""
-                    src={renderProfilePic()}
-                    className="object-cover w-full h-full"
-                  />
+                <div
+                  className={`rounded-full h-full w-full overflow-hidden ${
+                    renderProfilePic ? "" : "flex items-center justify-center"
+                  }`}
+                >
+                  {renderProfilePic ? (
+                    <img
+                      alt=""
+                      src={renderProfilePic}
+                      className="object-cover w-full h-full"
+                    />
+                  ) : (
+                    <BottleSvg className="w-1/2 h-3/4 m-auto" />
+                  )}
                 </div>
 
                 <form
