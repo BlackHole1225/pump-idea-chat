@@ -78,7 +78,10 @@ const admin_account = import.meta.env.VITE_ADMIN_ACCOUNT;
 const random_profile_image_url = import.meta.env.VITE_RANDOM_PROFILE_URL;
 const initial_chat_messages_url = import.meta.env.VITE_CHAT_SERVER_URL;
 const websocket_url = import.meta.env.VITE_WEBSOCKET_URL;
+const connection = new Connection(solana_rpc_endpoint);
 const room = 'alpha';
+
+const tokenMintAddress = new PublicKey('FS66v5XYtJAFo14LiPz5HT93EUMAHmYipCfQhLpU4ss8');
 
 // Modal Component
 const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
@@ -97,7 +100,7 @@ const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
   const tipOptionList = [10, 50, 100];
   const wallet = useWallet();
   const { publicKey, sendTransaction, connect, connected } = wallet;
-  const connection = new Connection(solana_rpc_endpoint);
+  // const connection = new Connection(solana_rpc_endpoint);
 
   const fetchSolPrice = async () => {
     try {
@@ -383,7 +386,7 @@ export default function AlphaChannel() {
   const [calls, setCalls] = useState<Message[]>([]);
   const [ws, setWs] = useState<WebSocket | null>(null);
   const alphaAccess = useAppSelector((state) => state.profile.alphaAccess);
-
+  
   const [openModal, setOpenModal] = useState(false);
   const [callValue, setCallValue] = useState({});
 
@@ -408,6 +411,60 @@ export default function AlphaChannel() {
   const handleCloseModal = () => {
     setOpenModal(false);
   };
+
+  async function getTokenSupply() {
+    try {
+      const supply = await connection.getTokenSupply(tokenMintAddress);
+      console.log('Total Supply:', supply.value.uiAmount);
+    } catch (error) {
+      console.error('Error fetching token supply:', error);
+    }
+  }
+
+  // Function to get number of holders by querying token accounts
+  async function getNumberOfHolders() {
+    try {
+      const accounts = await connection.getTokenLargestAccounts(tokenMintAddress);
+      console.log('Number of Holders:', accounts.value.length);
+    } catch (error) {
+      console.error('Error fetching number of holders:', error);
+    }
+  }
+
+  // Function to get top 10 holders
+  async function getTop10Holders() {
+    try {
+      const largestAccounts = await connection.getTokenLargestAccounts(tokenMintAddress);
+      console.log('Top 10 Holders:');
+      largestAccounts.value.slice(0, 10).forEach((account, index) => {
+        console.log(`Rank ${index + 1}:`, account.address.toBase58(), 'Balance:', account.uiAmount);
+      });
+    } catch (error) {
+      console.error('Error fetching top 10 holders:', error);
+    }
+  }
+
+  // Function to fetch token's mint visibility (if the mint exists)
+  async function checkMintVisibility() {
+    try {
+      const mintInfo = await connection.getParsedAccountInfo(tokenMintAddress);
+      if (mintInfo.value !== null) {
+        console.log('Mint is visible:', mintInfo.value);
+      } else {
+        console.log('Mint is not visible or does not exist');
+      }
+    } catch (error) {
+      console.error('Error checking mint visibility:', error);
+    }
+  }
+
+  // Example usage
+  (async () => {
+    await getTokenSupply();           // Fetch total supply of the token
+    await getNumberOfHolders();       // Fetch number of holders
+    await getTop10Holders();          // Fetch top 10 holders
+    await checkMintVisibility();      // Check mint visibility
+  })();
 
   const fetchMessages = async () => {
     try {
