@@ -28,14 +28,10 @@ const StatBox = styled(Box)({
 });
 
 interface TokenCardProps {
-  mint: string;
-  mcap: number,
-  holders: number,
-  top10: number,
-  mint_flag: boolean
+  tokenInfo: any
 }
 
-const TokenCard: FC<TokenCardProps> = ({ mint, mcap, holders, top10, mint_flag }) => {
+const TokenCard: FC<TokenCardProps> = ({ tokenInfo }) => {
   const theme = useAppSelector((state) => state.theme.current.styles);
 
   return (
@@ -51,13 +47,13 @@ const TokenCard: FC<TokenCardProps> = ({ mint, mcap, holders, top10, mint_flag }
       <div className="flex justify-between pb-2">
         <div className="flex items-center">
           <Avatar
-            src={`https://dd.dexscreener.com/ds-data/tokens/solana/${mint}.png`} // Replace with the actual image URL
-            alt="Frog"
+            src={tokenInfo.image} // Replace with the actual image URL
+            alt={tokenInfo.symbol}
             sx={{ width: 56, height: 56 }}
           />
           <div className="ml-5">
-            <p>FWOG</p>
-            <p className="lowercase">just a lil fwog in a big pond</p>
+            <p>{tokenInfo.name}</p>
+            <p className="lowercase">{tokenInfo.description}</p>
           </div>
         </div>
         <div>
@@ -87,11 +83,11 @@ const TokenCard: FC<TokenCardProps> = ({ mint, mcap, holders, top10, mint_flag }
       <div className="flex justify-between py-2">
         <StatBox>
           <p className="title">MCAP</p>
-          <p className="value">${mcap}</p>
+          <p className="value">${tokenInfo.mcap}</p>
         </StatBox>
         <StatBox>
           <p className="title">HOLDERS</p>
-          <p className="value">{holders}</p>
+          <p className="value">{"10"}</p>
         </StatBox>
         <StatBox>
           <p className="title">VOLUME</p>
@@ -107,12 +103,12 @@ const TokenCard: FC<TokenCardProps> = ({ mint, mcap, holders, top10, mint_flag }
         </StatBox>
         <StatBox>
           <p className="title">TOP 10</p>
-          <p className="value">{top10}%</p>
+          <p className="value">{tokenInfo.top10}%</p>
         </StatBox>
 
         <StatBox>
           <p className="title">MINT</p>
-          <p className="value">{mint_flag? "Enabled" : "Disabled"}</p>
+          <p className="value">{"Enabled"}</p>
         </StatBox>
 
         <StatBox>
