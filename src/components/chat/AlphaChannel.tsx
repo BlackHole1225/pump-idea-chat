@@ -537,17 +537,43 @@ export default function AlphaChannel() {
     }
   }
 
+  const getTokenMetaData = async (tokenId: string) => {
+    const response = await fetch(`${helius_api_url}/?api-key=${helius_api_key}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 'my-id',
+        method: 'getAsset',
+        params: {
+          id: tokenId
+        },
+      }),
+    });
+    const { result } = await response.json();
+    // console.log("Asset: ", result);
+  }
+
   const getTokenInfo = async (tokenId: string) => {
-    getTokenMcap(tokenMintAddress.toString());           // Fetch total supply of the token
-    getTokenHoldersCountFromHelius(tokenMintAddress.toString());       // Fetch number of holders
-    getTop10HoldersPercent(tokenMintAddress.toString());          // Fetch top 10 holders
-    checkMintVisibility(tokenMintAddress.toString());      // Check mint visibility
+    getTokenMetaData(tokenId);
+    getTokenMcap(tokenId);           // Fetch total supply of the token
+    getTokenHoldersCountFromHelius(tokenId);       // Fetch number of holders
+    getTop10HoldersPercent(tokenId);          // Fetch top 10 holders
+    checkMintVisibility(tokenId);      // Check mint visibility
   }
 
   // Example usage
   useEffect(() => {
     getTokenInfo(tokenMintAddress.toString());
   }, []);
+
+  const extractTokenAddress = (msg: string) => {
+    const regexPattern = /\b[A-Za-z0-9]{43,44}\b/g;
+    const tokenAddresses = msg.match(regexPattern);
+    return tokenAddresses;
+  }
 
   const fetchMessages = async () => {
     try {
@@ -562,6 +588,7 @@ export default function AlphaChannel() {
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const fetchedMessages = response.data.map((msg: any) => {
+        console.log("Token address", msg.text, extractTokenAddress(msg.text));
         return {
           id: msg._id,
           message: msg.text,

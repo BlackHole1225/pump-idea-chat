@@ -60,7 +60,7 @@ const pumpChartSlice = createSlice({
         });
         builder.addCase(fetchPumpTokenDetails.rejected, (state, action) => {
             state.status = 'error';
-            console.log({ action })
+            // console.log({ action })
             // state.isPumpChartShown = true
             state.message = action.error.message || 'Failed to fetch historical data';
         });

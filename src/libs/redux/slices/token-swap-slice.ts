@@ -254,7 +254,7 @@ const tokenSwapSlice = createSlice({
             .addCase(handleTokenSwap.pending, (state) => {
                 state.tokenSwapState = 'pending';
                 state.tokenSwapMessage = 'pending';
-                console.log('PENDING TRANSACTION');
+                // console.log('PENDING TRANSACTION');
             })
             .addCase(handleTokenSwap.rejected, (state, { payload }) => {
                 state.tokenSwapState = 'error';

@@ -161,7 +161,7 @@ export const connectSocket =
 
     socketInstance.on("pumpList", (data: PumpSocketReceived["pumpList"]) => {
       dispatch(setPumpSocketState("receiving"));
-      console.log(data);
+      // console.log(data);
       dispatch(setPumpList(data));
     });
 
