@@ -675,7 +675,7 @@ export default function AlphaChannel() {
     const price = await getTokenPrice(assetInfo.id);
     // const price = assetInfo?.token_info?.price_info?.price_per_token;
     const supply = assetInfo?.token_info?.supply;
-    console.log("decimals, price, supply", decimals, price, supply);
+    // console.log("decimals, price, supply", decimals, price, supply);
     console.log(price * supply / Math.pow(10, decimals));
     return price * supply / Math.pow(10, decimals);
   }
@@ -684,7 +684,7 @@ export default function AlphaChannel() {
     // console.log("get token info");
     try {
       const assetInfo = await getTokenMetaData(tokenId);
-      console.log("assetInfo", assetInfo);
+      // console.log("assetInfo", assetInfo);
       if(!assetInfo) throw new Error("Getting token info error");
       const mcap = await getTokenMcap(assetInfo);
       const top10_percent = await getTop10HoldersPercent(tokenId, assetInfo?.token_info?.supply);          // Fetch top 10 holders
@@ -735,7 +735,7 @@ export default function AlphaChannel() {
           let tokenInfo = null;
           if (tokenAddress) {
             tokenInfo = await getTokenInfo(tokenAddress[0]); // Ensure tokenMintAddress is defined and used correctly
-            console.log("token info", tokenInfo);
+            // console.log("token info", tokenInfo);
           }
           
           return {
@@ -761,6 +761,34 @@ export default function AlphaChannel() {
     }
   };
 
+  const hanldeNewMessage = async(event: MessageEvent<any>) => {
+    const receivedMessage = JSON.parse(event.data);
+    // console.log("alpha Received message:", receivedMessage);
+
+    const tokenAddress = extractTokenAddress(receivedMessage?.message)
+    // console.log("tokenAddress", tokenAddress);
+    // Extract token address from message text and fetch token info
+    let tokenInfo = null;
+    if (tokenAddress) {
+      tokenInfo = await getTokenInfo(tokenAddress[0]); // Ensure tokenMintAddress is defined and used correctly
+      // console.log("token info", tokenInfo);
+    }
+
+    const message = {
+      id: receivedMessage._id,
+      message: receivedMessage.message,
+      username: receivedMessage.sender_username,
+      address: receivedMessage.sender_wallet_address,
+      profilePic: receivedMessage.sender_pfp?.length
+        ? receivedMessage.sender_pfp
+        : `${random_profile_image_url}/${Math.floor(Math.random() * 50)}.jpg`,
+      timestamp: new Date(receivedMessage.timestamp).getTime(),
+      tokenInfo: tokenInfo
+    };
+
+    setCalls((prevCalls) => [message, ...prevCalls]);
+  }
+
   useEffect(() => {
     // getTokenDetails("FW3g9uA6rfZTkgf79RK2zBTd8Es6guSRSiXiHKErpump");
     fetchMessages();
@@ -775,22 +803,7 @@ export default function AlphaChannel() {
 
     socket.onmessage = (event) => {
       // console.log(">>>>>>>>>>>>>>>>>>>>>>>>event<<<<<<<<<<<<<<<<<<<<<<<<<<<");
-      const receivedMessage = JSON.parse(event.data);
-      // console.log("alpha Received message:", receivedMessage);
-
-      const message = {
-        id: receivedMessage._id,
-        message: receivedMessage.message,
-        username: receivedMessage.sender_username,
-        address: receivedMessage.sender_wallet_address,
-        profilePic: receivedMessage.sender_pfp?.length
-          ? receivedMessage.sender_pfp
-          : `${random_profile_image_url}/${Math.floor(Math.random() * 50)}.jpg`,
-        timestamp: new Date(receivedMessage.timestamp).getTime(),
-        tokenInfo: null
-      };
-
-      setCalls((prevCalls) => [message, ...prevCalls]);
+      hanldeNewMessage(event);
     };
 
     socket.onclose = () => {
