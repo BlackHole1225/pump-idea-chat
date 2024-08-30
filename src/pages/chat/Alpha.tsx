@@ -14,17 +14,17 @@ import { LAMPORTS_PER_SOL, Connection } from "@solana/web3.js";
 
 import { useAppSelector } from "../../libs/redux/hooks";
 
-import CopyTextButton from "../buttons/CopyTextButton";
-import TokenCard from "./TokenCard";
-import TipButton from "../buttons/LightButton";
-import Bolt from "../buttons/BoltButton";
-import Thread from "../buttons/Thread";
+import TipButton from "../../components/buttons/LightButton";
+import Bolt from "../../components/buttons/BoltButton";
+import Thread from "../../components/buttons/Thread";
 
 import { useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey, Transaction, SystemProgram } from "@solana/web3.js";
-import SkullButton from "../buttons/SkullButton";
-import TippedSuccessButton from "../buttons/TippedSuccessButton";
-import PendingButton from "../buttons/PendingButton";
+import SkullButton from "../../components/buttons/SkullButton";
+import TippedSuccessButton from "../../components/buttons/TippedSuccessButton";
+import PendingButton from "../../components/buttons/PendingButton";
+import CopyTextButton from "../../components/buttons/CopyTextButton";
+import TokenCard from "../../components/chat/TokenCard";
 // window.Buffer = buffer.Buffer;
 interface TipModalProps {
   open: boolean;
@@ -43,7 +43,6 @@ interface Message {
   address: string;
   profilePic: string;
   timestamp: number;
-  tokenInfo: any
 }
 
 const TipName = styled("div")`
@@ -84,22 +83,7 @@ const helius_api_url = import.meta.env.VITE_HELIUS_API_URL;
 const helius_api_key = import.meta.env.VITE_HELIUS_API_KEY;
 const room = 'alpha';
 
-const apiKeyNames = [
-  "api",
-  "api-key",
-  "apikey",
-  "x-api-key",
-  "auth",
-  "api-gen",
-  "nex-api",
-];
-
-function getRandomApiKeyHeader() {
-  const randomKeyName =
-    apiKeyNames[Math.floor(Math.random() * apiKeyNames.length)];
-  const randomKeyValue = Math.random().toString(36).substring(2);
-  return { [randomKeyName]: randomKeyValue };
-}
+const tokenMintAddress = new PublicKey('FS66v5XYtJAFo14LiPz5HT93EUMAHmYipCfQhLpU4ss8');
 
 // Modal Component
 const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
@@ -155,7 +139,7 @@ const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
     const feePubkey = new PublicKey(admin_account);
 
     const lamports = Math.round(transferAmount);
-    // console.log(lamports);
+    console.log(lamports);
 
     try {
       const balance = await connection.getBalance(publicKey);
@@ -283,7 +267,7 @@ const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
           textAlign: "center",
         }}
       >
-        <div className="flex mx-auto justify-center items-center mb-1">
+        <div className="flex items-center justify-center mx-auto mb-1">
           <img
             src={call.profilePic}
             alt={call.username}
@@ -314,7 +298,7 @@ const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
         >
           Thank this caller by leaving a tip :)
         </Typography>
-        <div className="flex mx-auto justify-center items-center mb-4">
+        <div className="flex items-center justify-center mx-auto mb-4">
           <Thread className="h-[160px]" />
         </div>
         <Stack
@@ -402,6 +386,11 @@ export default function AlphaChannel() {
   const theme = useAppSelector((state) => state.theme.current.styles);
   const [calls, setCalls] = useState<Message[]>([]);
   const alphaAccess = useAppSelector((state) => state.profile.alphaAccess);
+  const [tokenMCap, setTokenMCap] = useState(0);
+  const [tokenHolders, setTokenHolders] = useState(0);
+  const [top10Percent, setTop10Percent] = useState(0);
+  const [mintVisibility, setMintVisibility] = useState(false);
+
   const [openModal, setOpenModal] = useState(false);
   const [callValue, setCallValue] = useState({});
 
@@ -439,277 +428,146 @@ export default function AlphaChannel() {
         return 0;
       }
     } catch (error) {
-      console.log(error instanceof Error ? error.message : 'Unknown Error')
+      console.error('Error fetching token price:', error);
       return 0;
     }
   }
 
-  // const getTokenDetails = async (addr: string) => {
-  //   const randomApiKeyHeader = getRandomApiKeyHeader();
-  //   try {
-  //     const res = await fetch(
-  //       `https://gmgn.ai/defi/quotation/v1/tokens/sol/${addr}`,
-  //       {
-  //         headers: {
-  //           "api-key": helius_api_key ?? "",
-  //           ...randomApiKeyHeader,
-  //           Accept: "application/json",
-  //           "Content-Type": "application/json",
-  //         },
-  //       }
-  //     );
-
-  //     if (!res.ok) {
-  //       throw new Error(`HTTP error! Status: ${res.status}`);
-  //     }
-  //     const tokenDetails = await res.json();
-  //     console.log("token detials", tokenDetails);
-  //   } catch(error) {
-  //     console.log(error instanceof Error ? error.message : 'Unknown Error')
-  //   }
-  // }
-
-  // async function getTokenMcap(tokenId: string) {
-  //   try {
-  //     const supply = await connection.getTokenSupply(new PublicKey(tokenId));
-  //     const tokenPrice = await getTokenPrice(tokenId);
-  //     let mcap = 0;
-  //     if (supply?.value?.uiAmount) {
-  //       mcap = tokenPrice * supply?.value?.uiAmount;
-  //       // setTokenMCap(Math.floor(mcap));
-  //       return mcap;
-  //     } else {
-  //       setTokenMCap(0);
-  //       // return 0;
-  //     }
-  //   } catch (error) {
-  //     console.error('Error fetching token supply:', error);
-  //     // setTokenMCap(0);
-  //     return 0;
-  //   }
-  // }
-
-  // async function getTokenHoldersCountFromHelius(tokenId: string) {
-  //   try {
-  //     // Pagination logic
-  //     let page = 1;
-  //     // allOwners will store all the addresses that hold the token
-  //     let count = 0;
-
-  //     while (true) {
-  //       const response = await fetch(`${helius_api_url}/?api-key=${helius_api_key}`, {
-  //         method: "POST",
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //         },
-  //         body: JSON.stringify({
-  //           jsonrpc: "2.0",
-  //           method: "getTokenAccounts",
-  //           id: "helius-test",
-  //           params: {
-  //             page: page,
-  //             limit: 1000,
-  //             displayOptions: {},
-  //             //mint address for the token we are interested in
-  //             mint: tokenId,
-  //           },
-  //         }),
-  //       });
-  //       const data = await response.json();
-  //       // Pagination logic. 
-  //       if (!data.result || data.result.token_accounts.length === 0) {
-  //         // console.log(`No more results. Total pages: ${page - 1}`);
-  //         break;
-  //       }
-  //       // console.log(`Processing results from page ${page}`);
-  //       // Adding unique owners to a list of token owners. 
-  //       count += data.result.token_accounts.length;
-  //       page++;
-  //     }
-
-  //     // console.log("Number of holders", count);
-  //     // setTokenHolders(count);
-  //     return count;
-
-  //   } catch (error) {
-  //     console.error('Error fetching token holders count from Helius API:', error);
-  //     return 0;
-  //   }
-  // }
-
-  // async function getTokenHoldersCountFromHelius(tokenId: string) {
-  //   try {
-  //     const response = await fetch(`https://api.helius.xyz/v0/tokens/${tokenId}/holders`, {
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //         "X-API-KEY": helius_api_key
-  //       }
-  //     });
-  //     const data = await response.json();
-  //     console.log("get holders count", data);
-  //   } catch (error) {
-  //     console.error('Error fetching token holders count from Helius API:', error);
-  //     return 0;
-  //   }
-  // }
-
-  // Function to get top 10 holders
-  // async function getTop10HoldersPercent(tokenId: string, decimals: number, tokenSupply: number) {
-  //   // console.log("getTop10Holders Percent Function");
-  //   try {
-  //     // const supply = await connection.getTokenSupply(new PublicKey(tokenId));
-  //     const largestAccounts = await connection.getTokenLargestAccounts(new PublicKey(tokenId));
-  //     let holdersAmount = 0;
-  //     largestAccounts.value.slice(0, 10).forEach((account, index) => {
-  //       // console.log(`Rank ${index + 1}:`, account.address.toBase58(), 'Balance:', account.uiAmount);
-  //       if (account?.uiAmount) {
-  //         holdersAmount += account?.uiAmount * Math.pow(10, decimals);
-  //       }
-  //     });
-  //     console.log("token Supply", holdersAmount, tokenSupply);
-  //     if (tokenSupply !== 0) {
-  //       const percent = holdersAmount / tokenSupply * 100;
-  //       console.log("Top10Holders percent", percent);
-  //       // setTop10Percent(Math.floor(percent));
-  //       return Math.floor(percent);
-  //     } else {
-  //       // setTop10Percent(0);
-  //       throw new Error("cannot get supply");
-  //     }
-  //   } catch (error) {
-  //     console.log(error instanceof Error ? error.message : 'Unknown Error')
-  //     // console.error('Error fetching top 10 holders:', error);
-  //     return 0;
-  //   }
-  // }
-
-  async function getTop10HoldersPercent(tokenId: string, tokenSupply: number) {
-    // console.log("getTop10Holders Percent Function");
+  async function getTokenMcap(tokenId: string) {
     try {
-      const response = await fetch(`${helius_api_url}/?api-key=${helius_api_key}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          jsonrpc: '2.0',
-          id: 1,
-          method: 'getTokenLargestAccounts',
-          params: [tokenId],
-        }),
-      });
-      let holdersAmount = 0;
-      const { result } = await response.json();
-      // console.log("Largest accounts", result);
-      result.value.slice(0, 10).forEach((account: { amount: number; }, index: any) => {
-        // console.log(`Rank ${index + 1}:`, 'Balance:', account.amount);
-        if (account?.amount) {
-          holdersAmount += Number(account?.amount);
-        }
-      });
-      // console.log("token Supply", holdersAmount, tokenSupply);
-      if (tokenSupply !== 0) {
-        const percent = holdersAmount / tokenSupply * 100;
-        // console.log("Top10Holders percent", percent);
-        // setTop10Percent(Math.floor(percent));
-        return Math.floor(percent);
+      const supply = await connection.getTokenSupply(new PublicKey(tokenId));
+      const tokenPrice = await getTokenPrice(tokenId);
+      let mcap = 0;
+      if (supply?.value?.uiAmount) {
+        mcap = tokenPrice * supply?.value?.uiAmount;
+        setTokenMCap(Math.floor(mcap));
       } else {
-        // setTop10Percent(0);
-        throw new Error("cannot get supply");
+        setTokenMCap(0);
       }
     } catch (error) {
-      console.log(error instanceof Error ? error.message : 'Unknown Error')
-      // console.error('Error fetching top 10 holders:', error);
-      return 0;
+      console.error('Error fetching token supply:', error);
+      setTokenMCap(0);
+    }
+  }
+
+  async function getTokenHoldersCountFromHelius(tokenId: string) {
+    try {
+      // Pagination logic
+      let page = 1;
+      // allOwners will store all the addresses that hold the token
+      let count = 0;
+
+      while (true) {
+        const response = await fetch(`${helius_api_url}/?api-key=${helius_api_key}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            jsonrpc: "2.0",
+            method: "getTokenAccounts",
+            id: "helius-test",
+            params: {
+              page: page,
+              limit: 1000,
+              displayOptions: {},
+              //mint address for the token we are interested in
+              mint: tokenId,
+            },
+          }),
+        });
+        const data = await response.json();
+        // Pagination logic. 
+        if (!data.result || data.result.token_accounts.length === 0) {
+          // console.log(`No more results. Total pages: ${page - 1}`);
+          break;
+        }
+        // console.log(`Processing results from page ${page}`);
+        // Adding unique owners to a list of token owners. 
+        count += data.result.token_accounts.length;
+        page++;
+      }
+
+      // console.log("Number of holders", count);
+      setTokenHolders(count);
+
+    } catch (error) {
+      console.error('Error fetching token holders count from Helius API:', error);
+    }
+  }
+
+  // Function to get top 10 holders
+  async function getTop10HoldersPercent(tokenId: string) {
+    try {
+      const supply = await connection.getTokenSupply(new PublicKey(tokenId));
+      const largestAccounts = await connection.getTokenLargestAccounts(new PublicKey(tokenId));
+      let holdersAmount = 0;
+      largestAccounts.value.slice(0, 10).forEach((account, index) => {
+        // console.log(`Rank ${index + 1}:`, account.address.toBase58(), 'Balance:', account.uiAmount);
+        if (account?.uiAmount) {
+          holdersAmount += account?.uiAmount;
+        }
+      });
+      if (supply?.value?.uiAmount && supply?.value?.uiAmount !== 0) {
+        const percent = holdersAmount / supply?.value?.uiAmount * 100;
+        // console.log("Top10Holders percent", percent);
+        setTop10Percent(Math.floor(percent));
+      } else {
+        setTop10Percent(0);
+      }
+    } catch (error) {
+      console.error('Error fetching top 10 holders:', error);
     }
   }
 
   // Function to fetch token's mint visibility (if the mint exists)
-  // async function checkMintVisibility(tokenId: string) {
-  //   try {
-  //     const mintInfo = await connection.getParsedAccountInfo(new PublicKey(tokenId));
-  //     if (mintInfo.value !== null) {
-  //       // console.log('Mint is visible');
-  //       // setMintVisibility(true);
-  //       return true;
-  //     } else {
-  //       // console.log('Mint is not visible or does not exist');
-  //       // setMintVisibility(false);
-  //       return false;
-  //     }
-  //   } catch (error) {
-  //     // console.error('Error checking mint visibility:', error);
-  //     // setMintVisibility(false);
-  //     return false;
-  //   }
-  // }
-
-  const getTokenMetaData = async (tokenId: string) => {
+  async function checkMintVisibility(tokenId: string) {
     try {
-      const response = await fetch(`${helius_api_url}/?api-key=${helius_api_key}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          jsonrpc: '2.0',
-          id: 'my-id',
-          method: 'getAsset',
-          params: {
-            id: tokenId
-          },
-        }),
-      });
-      const { result } = await response.json();
-      // console.log("Asset: ", result);
-      return result;      
+      const mintInfo = await connection.getParsedAccountInfo(new PublicKey(tokenId));
+      if (mintInfo.value !== null) {
+        // console.log('Mint is visible');
+        setMintVisibility(true);
+      } else {
+        // console.log('Mint is not visible or does not exist');
+        setMintVisibility(false);
+      }
     } catch (error) {
-      console.log(error instanceof Error ? error.message : 'Unknown Error')
-      return null;
+      // console.error('Error checking mint visibility:', error);
+      setMintVisibility(false);
     }
   }
 
-  const getTokenMcap = async (assetInfo: any) => {
-    // console.log(assetInfo);
-    const decimals = assetInfo?.token_info?.decimals;
-    const price = await getTokenPrice(assetInfo.id);
-    // const price = assetInfo?.token_info?.price_info?.price_per_token;
-    const supply = assetInfo?.token_info?.supply;
-    console.log("decimals, price, supply", decimals, price, supply);
-    console.log(price * supply / Math.pow(10, decimals));
-    return price * supply / Math.pow(10, decimals);
+  const getTokenMetaData = async (tokenId: string) => {
+    const response = await fetch(`${helius_api_url}/?api-key=${helius_api_key}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 'my-id',
+        method: 'getAsset',
+        params: {
+          id: tokenId
+        },
+      }),
+    });
+    const { result } = await response.json();
+    // console.log("Asset: ", result);
   }
 
   const getTokenInfo = async (tokenId: string) => {
-    // console.log("get token info");
-    try {
-      const assetInfo = await getTokenMetaData(tokenId);
-      console.log("assetInfo", assetInfo);
-      if(!assetInfo) throw new Error("Getting token info error");
-      const mcap = await getTokenMcap(assetInfo);
-      const top10_percent = await getTop10HoldersPercent(tokenId, assetInfo?.token_info?.supply);          // Fetch top 10 holders
-      const tokenInfo = {
-        image: assetInfo?.content?.links?.image,
-        name: assetInfo?.content?.metadata?.name,
-        symbol: assetInfo?.content?.metadata?.symbol,
-        description: assetInfo?.content?.metadata?.description,
-        type: assetInfo?.content?.metadata?.token_standard,
-        mcap: mcap,
-        top10: top10_percent
-      }
-      // console.log("token info", tokenInfo);
-
-      // const mint_status = 
-      // getTokenMcap(tokenId);           // Fetch total supply of the token
-      // getTokenHoldersCountFromHelius(tokenId);       // Fetch number of holders
-      
-      // checkMintVisibility(tokenId);      // Check mint visibility
-      return tokenInfo;
-    } catch (error) {
-      console.log(error instanceof Error ? error.message : 'Unknown Error');
-      return null;
-    }
+    getTokenMetaData(tokenId);
+    getTokenMcap(tokenId);           // Fetch total supply of the token
+    getTokenHoldersCountFromHelius(tokenId);       // Fetch number of holders
+    getTop10HoldersPercent(tokenId);          // Fetch top 10 holders
+    checkMintVisibility(tokenId);      // Check mint visibility
   }
+
+  // Example usage
+  useEffect(() => {
+    getTokenInfo(tokenMintAddress.toString());
+  }, []);
 
   const extractTokenAddress = (msg: string) => {
     const regexPattern = /\b[A-Za-z0-9]{43,44}\b/g;
@@ -726,43 +584,35 @@ export default function AlphaChannel() {
         },
       });
 
+      // console.log("data", response.data);
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const fetchedMessages = await Promise.all(
-        response.data.map(async (msg: { _id: any; text: any; username: any; walletAddress: any; sender_pfp: string | any[]; timestamp: string | number | Date; }) => {
-          const tokenAddress = extractTokenAddress(msg?.text)
-          // console.log("tokenAddress", tokenAddress);
-          // Extract token address from message text and fetch token info
-          let tokenInfo = null;
-          if (tokenAddress) {
-            tokenInfo = await getTokenInfo(tokenAddress[0]); // Ensure tokenMintAddress is defined and used correctly
-            console.log("token info", tokenInfo);
-          }
-          
-          return {
-            id: msg._id,
-            message: msg.text,
-            username: msg.username,
-            address: msg.walletAddress,
-            profilePic: msg.sender_pfp?.length
-              ? msg.sender_pfp
-              : `${random_profile_image_url}/${Math.floor(Math.random() * 50)}.jpg`,
-            timestamp: new Date(msg.timestamp).getTime(),
-            tokenInfo: tokenInfo
-          };
-        })
-      );
+      const fetchedMessages = response.data.map((msg: any) => {
+        console.log("Token address", msg.text, extractTokenAddress(msg.text));
+        return {
+          id: msg._id,
+          message: msg.text,
+          username: msg.username,
+          address: msg.walletAddress,
+          profilePic: msg.sender_pfp?.length
+            ? msg.sender_pfp
+            : `${random_profile_image_url}/${Math.floor(
+              Math.random() * 50
+            )}.jpg`,
+          timestamp: new Date(msg.timestamp).getTime(),
+        };
+      });
 
       // console.log(">>>>>>>>>>>>>>>>>>>>> fetchedMessages <<<<<<<<<<<<<<<<<<<<<<<", fetchedMessages)
       setCalls(fetchedMessages);
       // setGridData(fetchedMessages.reverse().slice(0, totalSlots));
       // setGridData(fetchedMessages.reverse());
     } catch (error) {
-      console.log(error instanceof Error ? error.message : 'Unknown Error');
+      console.error("Error fetching messages:", error);
     }
   };
 
   useEffect(() => {
-    // getTokenDetails("FW3g9uA6rfZTkgf79RK2zBTd8Es6guSRSiXiHKErpump");
     fetchMessages();
 
     const socket = new WebSocket(
@@ -787,7 +637,6 @@ export default function AlphaChannel() {
           ? receivedMessage.sender_pfp
           : `${random_profile_image_url}/${Math.floor(Math.random() * 50)}.jpg`,
         timestamp: new Date(receivedMessage.timestamp).getTime(),
-        tokenInfo: null
       };
 
       setCalls((prevCalls) => [message, ...prevCalls]);
@@ -812,7 +661,7 @@ export default function AlphaChannel() {
       spacing={2}
       className="flex-col h-full no-scrollbar items-center w-max mx-auto overflow-hidden sm:w-[800px] max-sm:w-full"
     >
-      <Box className="mr-auto w-full p-4 pl-10">
+      <Box className="w-full p-4 pl-10 mr-auto">
         <Stack direction="row" spacing={1} alignItems="center">
           <svg
             width="22"
@@ -828,7 +677,7 @@ export default function AlphaChannel() {
           </svg>
           <h1 className=" text-[32px]">ALPHA</h1>
         </Stack>
-        <p className=" uppercase">Quality alpha from top callers</p>
+        <p className="uppercase ">Quality alpha from top callers</p>
       </Box>
 
       <Stack
@@ -848,7 +697,7 @@ export default function AlphaChannel() {
           <Box key={index} className="flex flex-col group ">
             <div
               style={{ color: theme.text_color }}
-              className="flex mx-auto w-full justify-between items-center"
+              className="flex items-center justify-between w-full mx-auto"
             >
               <div className="flex items-center">
                 <img
@@ -935,7 +784,7 @@ export default function AlphaChannel() {
                 </Box>
               </Box>
             </Box>
-            {call.tokenInfo && <TokenCard tokenInfo={call.tokenInfo} />}
+            <TokenCard mint="10" mcap={tokenMCap} holders={tokenHolders} top10={top10Percent} mint_flag={mintVisibility}/>
           </Box>
         ))}
       </Stack>
