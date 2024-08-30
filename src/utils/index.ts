@@ -100,7 +100,7 @@ export function calculateMaxFee(priority: keyof PriorityOptions): number | 'auto
     return Math.min(feeInLamports, MAX_LAMPORTS);
 }
 
-export function generateRandomHex(length=5) {
+export function generateRandomHex(length = 5) {
     const hex = '0123456789abcdef';
     let result = '';
     for (let i = 0; i < length; i++) {
@@ -109,6 +109,13 @@ export function generateRandomHex(length=5) {
     return result;
 }
 
-export function timeFrom(timestamp: number)   {
+export function timeFrom(timestamp: number) {
     return dayjs().to(dayjs(timestamp * 1000))
+}
+
+export function buildQueryParams(params: object): string {
+    const HELIUS_API_KEY = import.meta.env.VITE_HELIUS_API_KEY
+    const query = new URLSearchParams(params as any);
+    query.append("api-key", String(HELIUS_API_KEY));
+    return query.toString();
 }

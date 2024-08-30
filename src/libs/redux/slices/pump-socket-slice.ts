@@ -8,6 +8,7 @@ import {
   PumpSocketSend,
   PumpTokenItem,
 } from "../../../common/types";
+import { getAllPumpList } from "../../../common/api";
 
 const saveFiltersToLocalStorage = (filters: IFilterTypes[]) => {
   try {
@@ -159,10 +160,14 @@ export const connectSocket =
       dispatch(setConnected(false));
     });
 
-    socketInstance.on("pumpList", (data: PumpSocketReceived["pumpList"]) => {
+    socketInstance.on("pumpList", async (data: PumpSocketReceived["pumpList"]) => {
+      console.log("data:", data)
       dispatch(setPumpSocketState("receiving"));
       // console.log(data);
-      dispatch(setPumpList(data));
+      // dispatch(setPumpList(data));
+      const pumps = await getAllPumpList(new URLSearchParams(), new URLSearchParams())
+      console.log("pumps1:", pumps)
+      dispatch(setPumpList(pumps))
     });
 
     dispatch(setSocket(socketInstance));
@@ -174,31 +179,31 @@ export const connectSocket =
 
 export const emitEvent =
   <K extends keyof PumpSocketSend>(event: K, data?: any) =>
-  (dispatch: AppDispatch, getState: () => { pumpSocket: PumpSocketState }) => {
-    dispatch;
-    const { socket } = getState().pumpSocket;
-    if (socket) {
-      socket.emit(event, data);
-    }
-  };
+    (dispatch: AppDispatch, getState: () => { pumpSocket: PumpSocketState }) => {
+      dispatch;
+      const { socket } = getState().pumpSocket;
+      if (socket) {
+        socket.emit(event, data);
+      }
+    };
 
 export const onEvent =
   <K extends keyof PumpSocketReceived>(
     event: K,
     callback: (data: PumpSocketReceived[K]) => void
   ) =>
-  (dispatch: AppDispatch, getState: () => { pumpSocket: PumpSocketState }) => {
-    dispatch;
-    const { socket } = getState().pumpSocket;
-    if (socket) {
-      const typedCallback: (data: any) => void = (data) =>
-        callback(data as PumpSocketReceived[K]);
-      socket.on(event, typedCallback as any);
-      return () => {
-        socket.off(event, typedCallback as any);
-      };
-    }
-    return () => {};
-  };
+    (dispatch: AppDispatch, getState: () => { pumpSocket: PumpSocketState }) => {
+      dispatch;
+      const { socket } = getState().pumpSocket;
+      if (socket) {
+        const typedCallback: (data: any) => void = (data) =>
+          callback(data as PumpSocketReceived[K]);
+        socket.on(event, typedCallback as any);
+        return () => {
+          socket.off(event, typedCallback as any);
+        };
+      }
+      return () => { };
+    };
 
 export default socketIoSlice.reducer;
