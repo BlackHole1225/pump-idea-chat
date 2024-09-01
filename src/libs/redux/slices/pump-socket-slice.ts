@@ -8,7 +8,6 @@ import {
   PumpSocketSend,
   PumpTokenItem,
 } from "../../../common/types";
-import { getAllPumpList } from "../../../common/api";
 
 const saveFiltersToLocalStorage = (filters: IFilterTypes[]) => {
   try {
@@ -90,13 +89,13 @@ export const {
   setSearchParams,
 } = socketIoSlice.actions;
 
-export const filterAndSortPumpList = (
-  pumpList: PumpTokenItem[] | undefined,
+const filterAndSortPumpList = (
+  pumpList: any,
   filters: IFilterTypes[]
 ): PumpTokenItem[] => {
   if (!pumpList) return [];
 
-  const filteredPumpList = pumpList.filter((item) => {
+  const filteredPumpList = pumpList.filter((item: any) => {
     return filters.every((filter) => {
       const value = getFilterValue(item, filter.name);
       if (value === undefined) return false;
@@ -106,7 +105,7 @@ export const filterAndSortPumpList = (
     });
   });
 
-  const sortedPumpList = filteredPumpList.sort((a, b) => {
+  const sortedPumpList = filteredPumpList.sort((a: any, b: any) => {
     for (const filter of filters) {
       const aValue = getFilterValue(a, filter.name);
       const bValue = getFilterValue(b, filter.name);
@@ -123,19 +122,20 @@ export const filterAndSortPumpList = (
 
   return sortedPumpList;
 };
+
 const getFilterValue = (
-  item: PumpTokenItem,
+  item: any,
   filterName: IFilterTypes["name"]
 ): number | undefined => {
   switch (filterName) {
     case "holder_count":
       return item.holder_count;
     case "liquidity":
-      return item.liquidity;
+      return item.liquidity.usd;
     case "volume_24h":
-      return item.volume_24h;
+      return item.volume.h24;
     case "market_cap":
-      return item.market_cap;
+      return item.fdv;
     case "dev holding":
       return item.creator_balance; // Assuming `creator_balance` is what is meant by 'dev holding'
     default:
@@ -161,13 +161,13 @@ export const connectSocket =
     });
 
     socketInstance.on("pumpList", async (data: PumpSocketReceived["pumpList"]) => {
-      console.log("data:", data)
+      // console.log("data:", data)
       dispatch(setPumpSocketState("receiving"));
       // console.log(data);
-      // dispatch(setPumpList(data));
-      const pumps = await getAllPumpList(new URLSearchParams(), new URLSearchParams())
-      console.log("pumps1:", pumps)
-      dispatch(setPumpList(pumps))
+      dispatch(setPumpList(data));
+      // const pumps = await getAllPumpList(new URLSearchParams(), new URLSearchParams())
+      // console.log("pumps1:", pumps)
+      // dispatch(setPumpList(pumps))
     });
 
     dispatch(setSocket(socketInstance));
