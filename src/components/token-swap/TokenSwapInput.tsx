@@ -55,7 +55,7 @@ const TokenSwapInput: React.FC<ITokenSwapInputProps> = ({
                 <Typography variant="body2" className='text-white' style={{ textTransform: 'capitalize', color: theme.bgColor == '#0000FF' ? theme.bgColor:theme.text_color }}>{side}</Typography>
                 <TokenBalance
                     walletAddress={String(wallet?.publicKey?.toString?.())}
-                    tokenMintAddress={String(selectedToken?.address)}
+                    tokenMintAddress={String(selectedToken?.baseToken?.address)}
                     connection={connection}
                 />
             </Grid>
@@ -83,15 +83,15 @@ const TokenSwapInput: React.FC<ITokenSwapInputProps> = ({
                         margin='auto'
                         style={{ background: 'grey', maxHeight: '40px' }}
                     >
-                        <MenuItem key={selectedToken?.symbol} value={selectedToken?.symbol}>
+                        <MenuItem key={selectedToken?.baseToken.symbol} value={selectedToken?.baseToken?.symbol}>
                             <Box gap={'.3rem'} display='flex' alignItems='center' flexDirection='row' justifyContent='center'>
                                 <img
                                     className="w-5 h-5 rounded-full aspect-square"
-                                    src={selectedToken?.logo}
-                                    alt={`${selectedToken?.symbol} selectedToken?`}
+                                    src={selectedToken?.info?.imageUrl}
+                                    alt={`${selectedToken?.baseToken?.symbol} selectedToken?`}
                                 />
                                 <Typography variant="body2">
-                                    {selectedToken?.symbol}
+                                    {selectedToken?.baseToken?.symbol}
                                 </Typography>
                             </Box>
                         </MenuItem>

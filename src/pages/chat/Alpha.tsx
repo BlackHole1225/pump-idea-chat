@@ -12,22 +12,19 @@ import styled from "styled-components";
 import axios from "axios";
 import { LAMPORTS_PER_SOL, Connection } from "@solana/web3.js";
 
-import { useAppSelector, useAppDispatch } from "../../libs/redux/hooks";
+import { useAppSelector } from "../../libs/redux/hooks";
 
-import CopyTextButton from "../buttons/CopyTextButton";
-import TokenCard from "./TokenCard";
-import TipButton from "../buttons/LightButton";
-import Bolt from "../buttons/BoltButton";
-import Thread from "../buttons/Thread";
+import TipButton from "../../components/buttons/LightButton";
+import Bolt from "../../components/buttons/BoltButton";
+import Thread from "../../components/buttons/Thread";
 
 import { useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey, Transaction, SystemProgram } from "@solana/web3.js";
-import SkullButton from "../buttons/SkullButton";
-import TippedSuccessButton from "../buttons/TippedSuccessButton";
-import PendingButton from "../buttons/PendingButton";
-import { fetchAlphaMessages, getAlphaTokenInfo, fetchSolPrice } from "../../common/api";
-import { TokenInfo } from "../../common/types";
-import { formatTimestamp, formatAddress } from "../../utils/format";
+import SkullButton from "../../components/buttons/SkullButton";
+import TippedSuccessButton from "../../components/buttons/TippedSuccessButton";
+import PendingButton from "../../components/buttons/PendingButton";
+import CopyTextButton from "../../components/buttons/CopyTextButton";
+import TokenCard from "../../components/chat/TokenCard";
 // window.Buffer = buffer.Buffer;
 interface TipModalProps {
   open: boolean;
@@ -44,9 +41,8 @@ interface Message {
   message: string;
   username: string;
   address: string;
-  profilePic: string | undefined;
-  timestamp: string;
-  tokenInfo: TokenInfo | null
+  profilePic: string;
+  timestamp: number;
 }
 
 const TipName = styled("div")`
@@ -75,13 +71,19 @@ const TipOptionInput = styled(Input)`
 `;
 
 const solana_rpc_endpoint = import.meta.env.VITE_RPC_URL;
+const coingecko_api_url = import.meta.env.VITE_COINGECKO_API_URL;
 const fee_account = import.meta.env.VITE_FEE_ACCOUNT;
 const admin_account = import.meta.env.VITE_ADMIN_ACCOUNT;
 const random_profile_image_url = import.meta.env.VITE_RANDOM_PROFILE_URL;
+const initial_chat_messages_url = import.meta.env.VITE_CHAT_SERVER_URL;
+const radym_api_price_url = import.meta.env.VITE_RAYDIUM_PRICE_API_URL;
 const websocket_url = import.meta.env.VITE_WEBSOCKET_URL;
 const connection = new Connection(solana_rpc_endpoint);
-
+const helius_api_url = import.meta.env.VITE_HELIUS_API_URL;
+const helius_api_key = import.meta.env.VITE_HELIUS_API_KEY;
 const room = 'alpha';
+
+const tokenMintAddress = new PublicKey('FS66v5XYtJAFo14LiPz5HT93EUMAHmYipCfQhLpU4ss8');
 
 // Modal Component
 const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
@@ -101,6 +103,16 @@ const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
   const wallet = useWallet();
   const { publicKey, sendTransaction, connect, connected } = wallet;
   // const connection = new Connection(solana_rpc_endpoint);
+
+  const fetchSolPrice = async () => {
+    try {
+      const response = await axios.get(coingecko_api_url);
+      return response.data.solana.usd;
+    } catch (error) {
+      console.error("Error fetching SOL price:", error);
+      return 0;
+    }
+  };
 
   const handleTip = async () => {
     if (!connected) {
@@ -127,15 +139,15 @@ const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
     const feePubkey = new PublicKey(admin_account);
 
     const lamports = Math.round(transferAmount);
-    // console.log(lamports);
+    console.log(lamports);
 
     try {
       const balance = await connection.getBalance(publicKey);
-      // console.log(balance);
+      console.log(balance);
 
       const sendAmount = Math.round(lamports * 0.99);
       const feeAmount = Math.round(lamports * 0.01);
-      // console.log(feeAmount);
+      console.log(feeAmount);
 
       if (balance < lamports) {
         console.log("Insufficient Balance");
@@ -255,7 +267,7 @@ const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
           textAlign: "center",
         }}
       >
-        <div className="flex mx-auto justify-center items-center mb-1">
+        <div className="flex items-center justify-center mx-auto mb-1">
           <img
             src={call.profilePic}
             alt={call.username}
@@ -286,7 +298,7 @@ const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
         >
           Thank this caller by leaving a tip :)
         </Typography>
-        <div className="flex mx-auto justify-center items-center mb-4">
+        <div className="flex items-center justify-center mx-auto mb-4">
           <Thread className="h-[160px]" />
         </div>
         <Stack
@@ -374,6 +386,11 @@ export default function AlphaChannel() {
   const theme = useAppSelector((state) => state.theme.current.styles);
   const [calls, setCalls] = useState<Message[]>([]);
   const alphaAccess = useAppSelector((state) => state.profile.alphaAccess);
+  const [tokenMCap, setTokenMCap] = useState(0);
+  const [tokenHolders, setTokenHolders] = useState(0);
+  const [top10Percent, setTop10Percent] = useState(0);
+  const [mintVisibility, setMintVisibility] = useState(false);
+
   const [openModal, setOpenModal] = useState(false);
   const [callValue, setCallValue] = useState({});
 
@@ -391,87 +408,211 @@ export default function AlphaChannel() {
     setOpenModal(false);
   };
 
+  async function getTokenPrice(tokenId: string) {
+    try {
+      // CoinGecko API URL
+      const url = radym_api_price_url;
+
+      // Fetch the token price
+      const response = await fetch(url);
+      const data = await response.json();
+
+      // Display the price
+      const tokenPrice = data[tokenId];
+
+      if (tokenPrice) {
+        console.log(`Price of token ${tokenId}: $${tokenPrice}`);
+        return tokenPrice;
+      } else {
+        console.log('Token not found in Raydium price data.');
+        return 0;
+      }
+    } catch (error) {
+      console.error('Error fetching token price:', error);
+      return 0;
+    }
+  }
+
+  async function getTokenMcap(tokenId: string) {
+    try {
+      const supply = await connection.getTokenSupply(new PublicKey(tokenId));
+      const tokenPrice = await getTokenPrice(tokenId);
+      let mcap = 0;
+      if (supply?.value?.uiAmount) {
+        mcap = tokenPrice * supply?.value?.uiAmount;
+        setTokenMCap(Math.floor(mcap));
+      } else {
+        setTokenMCap(0);
+      }
+    } catch (error) {
+      console.error('Error fetching token supply:', error);
+      setTokenMCap(0);
+    }
+  }
+
+  async function getTokenHoldersCountFromHelius(tokenId: string) {
+    try {
+      // Pagination logic
+      let page = 1;
+      // allOwners will store all the addresses that hold the token
+      let count = 0;
+
+      while (true) {
+        const response = await fetch(`${helius_api_url}/?api-key=${helius_api_key}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            jsonrpc: "2.0",
+            method: "getTokenAccounts",
+            id: "helius-test",
+            params: {
+              page: page,
+              limit: 1000,
+              displayOptions: {},
+              //mint address for the token we are interested in
+              mint: tokenId,
+            },
+          }),
+        });
+        const data = await response.json();
+        // Pagination logic. 
+        if (!data.result || data.result.token_accounts.length === 0) {
+          // console.log(`No more results. Total pages: ${page - 1}`);
+          break;
+        }
+        // console.log(`Processing results from page ${page}`);
+        // Adding unique owners to a list of token owners. 
+        count += data.result.token_accounts.length;
+        page++;
+      }
+
+      // console.log("Number of holders", count);
+      setTokenHolders(count);
+
+    } catch (error) {
+      console.error('Error fetching token holders count from Helius API:', error);
+    }
+  }
+
+  // Function to get top 10 holders
+  async function getTop10HoldersPercent(tokenId: string) {
+    try {
+      const supply = await connection.getTokenSupply(new PublicKey(tokenId));
+      const largestAccounts = await connection.getTokenLargestAccounts(new PublicKey(tokenId));
+      let holdersAmount = 0;
+      largestAccounts.value.slice(0, 10).forEach((account, index) => {
+        // console.log(`Rank ${index + 1}:`, account.address.toBase58(), 'Balance:', account.uiAmount);
+        if (account?.uiAmount) {
+          holdersAmount += account?.uiAmount;
+        }
+      });
+      if (supply?.value?.uiAmount && supply?.value?.uiAmount !== 0) {
+        const percent = holdersAmount / supply?.value?.uiAmount * 100;
+        // console.log("Top10Holders percent", percent);
+        setTop10Percent(Math.floor(percent));
+      } else {
+        setTop10Percent(0);
+      }
+    } catch (error) {
+      console.error('Error fetching top 10 holders:', error);
+    }
+  }
+
+  // Function to fetch token's mint visibility (if the mint exists)
+  async function checkMintVisibility(tokenId: string) {
+    try {
+      const mintInfo = await connection.getParsedAccountInfo(new PublicKey(tokenId));
+      if (mintInfo.value !== null) {
+        // console.log('Mint is visible');
+        setMintVisibility(true);
+      } else {
+        // console.log('Mint is not visible or does not exist');
+        setMintVisibility(false);
+      }
+    } catch (error) {
+      // console.error('Error checking mint visibility:', error);
+      setMintVisibility(false);
+    }
+  }
+
+  const getTokenMetaData = async (tokenId: string) => {
+    const response = await fetch(`${helius_api_url}/?api-key=${helius_api_key}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 'my-id',
+        method: 'getAsset',
+        params: {
+          id: tokenId
+        },
+      }),
+    });
+    const { result } = await response.json();
+    // console.log("Asset: ", result);
+  }
+
+  const getTokenInfo = async (tokenId: string) => {
+    getTokenMetaData(tokenId);
+    getTokenMcap(tokenId);           // Fetch total supply of the token
+    getTokenHoldersCountFromHelius(tokenId);       // Fetch number of holders
+    getTop10HoldersPercent(tokenId);          // Fetch top 10 holders
+    checkMintVisibility(tokenId);      // Check mint visibility
+  }
+
+  // Example usage
+  useEffect(() => {
+    getTokenInfo(tokenMintAddress.toString());
+  }, []);
+
   const extractTokenAddress = (msg: string) => {
     const regexPattern = /\b[A-Za-z0-9]{43,44}\b/g;
     const tokenAddresses = msg.match(regexPattern);
     return tokenAddresses;
   }
 
-  const hanldeNewMessage = async(event: MessageEvent<any>) => {
-    // const receivedMessage = JSON.parse(event.data);
-    // // console.log("alpha Received message:", receivedMessage);
-
-    // const tokenAddress = extractTokenAddress(receivedMessage?.message)
-    // // console.log("tokenAddress", tokenAddress);
-    // // Extract token address from message text and fetch token info
-    // let tokenInfo = null;
-    // if (tokenAddress) {
-    //   tokenInfo = await getAlphaTokenInfo(tokenAddress[0]); // Ensure tokenMintAddress is defined and used correctly
-    //   // console.log("token info", tokenInfo);
-    // }
-
-    // const message = {
-    //   id: receivedMessage._id,
-    //   message: receivedMessage.message,
-    //   username: receivedMessage.sender_username,
-    //   address: receivedMessage.sender_wallet_address,
-    //   profilePic: receivedMessage.sender_pfp?.length
-    //     ? receivedMessage.sender_pfp
-    //     : `${random_profile_image_url}/${Math.floor(Math.random() * 50)}.jpg`,
-    //   timestamp: new Date(receivedMessage.timestamp).getTime(),
-    //   tokenInfo: tokenInfo
-    // };
-
-    // setCalls((prevCalls) => [message, ...prevCalls]);
-  }
-
   const fetchMessages = async () => {
     try {
-      const result = await fetchAlphaMessages();
-      if(result.ok) {
-        await Promise.all(
-          result.data.map(async (msg: { _id: any; text: any; username: any; walletAddress: any; sender_pfp: string | any[]; timestamp: string | number | Date; }) => {
-            const tokenAddress = extractTokenAddress(msg?.text)
-            // console.log("tokenAddress", tokenAddress);
-            // Extract token address from message text and fetch token info
-            let tokenInfo = null;
-            if (tokenAddress) {
-              const result = await getAlphaTokenInfo(tokenAddress[0]); // Ensure tokenMintAddress is defined and used correctly
-              tokenInfo = result.data;
-            }
+      const response = await axios.get(initial_chat_messages_url, {
+        params: {
+          method: "get_messages",
+          room: "alpha", // Replace with the actual room name or parameter you need
+        },
+      });
 
-            // Assume this is the incoming data for profilePic which can be a string or array
-            const incomingProfilePic: string | any[] | undefined = msg.sender_pfp;
+      // console.log("data", response.data);
 
-            // Fix: Ensure the profilePic is always a string or undefined
-            const profilePic: string | undefined = Array.isArray(incomingProfilePic)
-              ? incomingProfilePic.join(", ") // Convert the array to a string if it's an array
-              : incomingProfilePic; // Use the value directly if it's a string or undefined
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const fetchedMessages = response.data.map((msg: any) => {
+        console.log("Token address", msg.text, extractTokenAddress(msg.text));
+        return {
+          id: msg._id,
+          message: msg.text,
+          username: msg.username,
+          address: msg.walletAddress,
+          profilePic: msg.sender_pfp?.length
+            ? msg.sender_pfp
+            : `${random_profile_image_url}/${Math.floor(
+              Math.random() * 50
+            )}.jpg`,
+          timestamp: new Date(msg.timestamp).getTime(),
+        };
+      });
 
-            const message: Message = {
-              id: msg._id,
-              message: msg.text,
-              username: msg.username,
-              address: msg.walletAddress,
-              profilePic: profilePic ? profilePic : `${random_profile_image_url}/${Math.floor(Math.random() * 50)}.jpg`,
-              timestamp: formatTimestamp(msg.timestamp as string),
-              tokenInfo: tokenInfo
-            };
-
-            setCalls((prevCalls) => [message, ...prevCalls]);
-
-          })
-        );
-      } else {
-        throw new Error("failed to get alpha messages");
-      }
+      // console.log(">>>>>>>>>>>>>>>>>>>>> fetchedMessages <<<<<<<<<<<<<<<<<<<<<<<", fetchedMessages)
+      setCalls(fetchedMessages);
+      // setGridData(fetchedMessages.reverse().slice(0, totalSlots));
+      // setGridData(fetchedMessages.reverse());
     } catch (error) {
-      console.log(error instanceof Error ? error.message : "Uknown Error");
+      console.error("Error fetching messages:", error);
     }
-  }
+  };
 
   useEffect(() => {
-    // getTokenDetails("FW3g9uA6rfZTkgf79RK2zBTd8Es6guSRSiXiHKErpump");
     fetchMessages();
 
     const socket = new WebSocket(
@@ -484,7 +625,21 @@ export default function AlphaChannel() {
 
     socket.onmessage = (event) => {
       // console.log(">>>>>>>>>>>>>>>>>>>>>>>>event<<<<<<<<<<<<<<<<<<<<<<<<<<<");
-      hanldeNewMessage(event);
+      const receivedMessage = JSON.parse(event.data);
+      // console.log("alpha Received message:", receivedMessage);
+
+      const message = {
+        id: receivedMessage._id,
+        message: receivedMessage.message,
+        username: receivedMessage.sender_username,
+        address: receivedMessage.sender_wallet_address,
+        profilePic: receivedMessage.sender_pfp?.length
+          ? receivedMessage.sender_pfp
+          : `${random_profile_image_url}/${Math.floor(Math.random() * 50)}.jpg`,
+        timestamp: new Date(receivedMessage.timestamp).getTime(),
+      };
+
+      setCalls((prevCalls) => [message, ...prevCalls]);
     };
 
     socket.onclose = () => {
@@ -506,7 +661,7 @@ export default function AlphaChannel() {
       spacing={2}
       className="flex-col h-full no-scrollbar items-center w-max mx-auto overflow-hidden sm:w-[800px] max-sm:w-full"
     >
-      <Box className="mr-auto w-full p-4 pl-10">
+      <Box className="w-full p-4 pl-10 mr-auto">
         <Stack direction="row" spacing={1} alignItems="center">
           <svg
             width="22"
@@ -522,7 +677,7 @@ export default function AlphaChannel() {
           </svg>
           <h1 className=" text-[32px]">ALPHA</h1>
         </Stack>
-        <p className=" uppercase">Quality alpha from top callers</p>
+        <p className="uppercase ">Quality alpha from top callers</p>
       </Box>
 
       <Stack
@@ -542,7 +697,7 @@ export default function AlphaChannel() {
           <Box key={index} className="flex flex-col group ">
             <div
               style={{ color: theme.text_color }}
-              className="flex mx-auto w-full justify-between items-center"
+              className="flex items-center justify-between w-full mx-auto"
             >
               <div className="flex items-center">
                 <img
@@ -556,7 +711,12 @@ export default function AlphaChannel() {
                   ) : call.username.length === 0 ||
                     call.username === "Unknown" ? (
                     <p className="uppercase text-[14px]">
-                      {formatAddress(call.address)}
+                      {call.address.slice(0, 4) +
+                        "..." +
+                        call.address.slice(
+                          call.address.length - 4,
+                          call.address.length
+                        )}
                     </p>
                   ) : (
                     <p className="uppercase text-[14px]">{call.username}</p>
@@ -624,7 +784,7 @@ export default function AlphaChannel() {
                 </Box>
               </Box>
             </Box>
-            {call.tokenInfo && <TokenCard tokenItem={call.tokenInfo} />}
+            {/* <TokenCard mcap={tokenMCap} holders={tokenHolders} top10={top10Percent} mint_flag={mintVisibility}/> */}
           </Box>
         ))}
       </Stack>

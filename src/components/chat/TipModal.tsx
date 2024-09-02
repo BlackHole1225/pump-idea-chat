@@ -31,13 +31,13 @@ const PumpDetailsModal: React.FC<PumpDetailsModalProps> = ({ pumpItem, isOpen, o
                 spacing={2}
                 className='rounded-[8px] overflow-hidden uppercase w-[480px] max-w-full max-h-full p-4 shadow-sm '>
                 <Box className=' flex flex-col gap-2 justify-center items-center'>
-                    <img src={pumpItem.logo} alt={pumpItem.address} className="w-10 h-10 rounded-full" />
-                    <p className="font-bold text-[16px]" style={{ color: theme.bgColor == '#0000FF' ? theme.bgColor:theme.text_color }}>{pumpItem.name}</p>
+                    <img src={pumpItem?.info?.imageUrl} alt={pumpItem?.baseToken?.address} className="w-10 h-10 rounded-full" />
+                    <p className="font-bold text-[16px]" style={{ color: theme.bgColor == '#0000FF' ? theme.bgColor:theme.text_color }}>{pumpItem?.info?.imageUrl}</p>
                     <Divider style={{ background: theme.bgColor == '#0000FF' ? theme.bgColor:theme.text_color, width: 130, height: 2, borderRadius: 50 }} />
                 </Box>
                 <Box className='flex-1 w-full flex overflow-auto custom-scrollbar'>
                     <p className='m-auto max-h-full min-w-full text-wrap whitespace-pre-wrap break-words font-semibold text-center' style={{ color: theme.bgColor == '#0000FF' ? theme.bgColor:theme.text_color }} >
-                        {pumpItem?.social_links?.description}
+                        {"Test"}
                     </p>
                 </Box>
                 <Box style={{ background: theme.text_color }} className=' w-full -700 flex items-center justify-center rounded'>

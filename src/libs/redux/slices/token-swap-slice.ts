@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
-import { PublicKey, VersionedTransaction } from "@solana/web3.js";
+import { Connection, PublicKey, VersionedTransaction } from "@solana/web3.js";
 import { Buffer } from 'buffer';
 import { toast } from "react-toastify";
 import {
@@ -18,14 +18,17 @@ import { calculateBpsAmount, calculateMaxFee, parseEther } from "../../../utils"
 import { formatNumber } from "../../../utils/format";
 
 const FEE_BP = import.meta.env.VITE_FEE_BP
+const SOLANA_RPC_URL = import.meta.env.VITE_RPC_URL
+const rpcConnection = new Connection(SOLANA_RPC_URL);
 
 const handleTokenSelection = (
     state: typeof initialStates['tokenSwapInitialState'],
     action: any,
     tokenKey: 'tokenToSend' | 'tokenToReceive'
 ) => {
-    if (action?.payload?.symbol?.toUpperCase?.() === 'SOL') {
-        if (state[tokenKey]?.symbol?.toUpperCase?.() == 'SOL') {
+    // console.log("payload", action.payload);
+    if (action?.payload?.baseToken.symbol?.toUpperCase?.() === 'SOL') {
+        if (state[tokenKey]?.baseToken?.symbol?.toUpperCase?.() == 'SOL') {
             state[tokenKey === 'tokenToSend' ? 'tokenToReceive' : 'tokenToSend'] = action.payload;
             state[tokenKey] = NativeToken as any;
         }
@@ -93,7 +96,7 @@ export const handleTokenSwap = createAsyncThunk(
                 [
                     Buffer.from('referral_ata'),
                     new PublicKey(FEE_ACCOUNT).toBuffer(),
-                    new PublicKey(NativeToken.address).toBuffer(),
+                    new PublicKey(NativeToken.baseToken.address).toBuffer(),
                 ],
                 new PublicKey('REFER4ZgmyYx9c6He5XfaTMiGfdLwRnkV4RPp9t9iF3')
             );
@@ -201,13 +204,19 @@ const tokenSwapSlice = createSlice({
         setPriorityOption: (state, action: PayloadAction<keyof PriorityOptions>) => {
             state.settings.selectedPriority = action.payload
         },
+        setTokenToReceiveDecimal: (state, action: PayloadAction<number>) => {
+            state.tokenToReceiveDecimal = action.payload
+        },
+        setTokenToSendDecimal: (state, action: PayloadAction<number>) => {
+            state.tokenToSendDecimal = action.payload
+        },
     },
     extraReducers: (builder) => {
         builder
             .addCase(fetchTokenRate.fulfilled, (state, { payload }) => {
                 state.fetchTokenRateState = 'success';
                 state.fetchTokenRateMessage = 'success';
-                state.conversionRate = payload?.data[state.tokenToSend?.address as string]?.price;
+                state.conversionRate = payload?.data[state.tokenToSend?.baseToken?.address as string]?.price;
             })
             .addCase(fetchTokenRate.pending, (state) => {
                 state.fetchTokenRateState = 'pending';
@@ -222,17 +231,17 @@ const tokenSwapSlice = createSlice({
                 state.fetchQuoteState = 'success';
                 state.fetchQuoteMessage = 'success';
                 state.quoteResponse = payload;
-                if (state.tokenToReceive?.address !== NativeToken.address) {
-                    const feeAmount = parseEther(Number(payload.platformFee.amount), Number(state.tokenToReceive?.decimals));
-                    const outAmount = parseEther(Number(payload.outAmount), Number(state.tokenToReceive?.decimals));
-                    const feeOut = (feeAmount / outAmount) * parseEther(Number(payload.inAmount), Number(state.tokenToSend?.decimals));
+                if (state.tokenToReceive?.baseToken?.address !== NativeToken.baseToken.address) {
+                    const feeAmount = parseEther(Number(payload.platformFee.amount), Number(state.tokenToReceiveDecimal));
+                    const outAmount = parseEther(Number(payload.outAmount), Number(state.tokenToReceiveDecimal));
+                    const feeOut = (feeAmount / outAmount) * parseEther(Number(payload.inAmount), Number(state.tokenToSendDecimal));
                     const formattedFee = formatNumber(feeOut);
                     state.platformFeeAmount = formattedFee as any;
-                    state.quoteResponse.platformFee.fee_currency = NativeToken.symbol;
+                    state.quoteResponse.platformFee.fee_currency = NativeToken.baseToken.symbol;
                 } else {
-                    state.platformFeeAmount = parseEther(Number(payload.platformFee.amount), Number(state.tokenToSend?.decimals))
+                    state.platformFeeAmount = parseEther(Number(payload.platformFee.amount), Number(state.tokenToSendDecimal))
                 }
-                state.amountToReceive = parseEther(Number(payload.outAmount), Number(state.tokenToReceive?.decimals));
+                state.amountToReceive = parseEther(Number(payload.outAmount), Number(state.tokenToReceiveDecimal));
             })
             .addCase(fetchQuoteSwap.pending, (state) => {
                 state.amountToReceive = ''
@@ -276,6 +285,8 @@ export const {
     setTokensList,
     setSlippagePercentage,
     setPriorityOption,
+    setTokenToReceiveDecimal,
+    setTokenToSendDecimal
 } = tokenSwapSlice.actions;
 
 export default tokenSwapSlice.reducer;

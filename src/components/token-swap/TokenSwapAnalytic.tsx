@@ -22,7 +22,9 @@ const TokenSwapAnalytic = () => {
         quoteResponse,
         fetchQuoteState,
         platformFeeAmount,
-        platformFeeToken
+        platformFeeToken,
+        tokenToSendDecimal,
+        tokenToReceiveDecimal
     } = useAppSelector(state => state.tokenSwap);
 
     const handleClickOutside = (event: MouseEvent) => {
@@ -39,7 +41,7 @@ const TokenSwapAnalytic = () => {
     }, []);
 
     const skeletonLoading = <Skeleton style={{ borderRadius: '50px' }} variant="rectangular" width={50} height={18} />;
-    const maxToPay = parseEther(Number(quoteResponse?.inAmount || 0), Number(tokenToSend?.decimals || 0));
+    const maxToPay = parseEther(Number(quoteResponse?.inAmount || 0), Number(tokenToSendDecimal || 0));
 
     const priceImpactColor = () => {
         if (Number(quoteResponse?.priceImpactPct) > 0.1) return 'red';
@@ -59,7 +61,7 @@ const TokenSwapAnalytic = () => {
             >
                 <Grid container alignItems="center" justifyContent="space-between">
                     <span className=' text-xs '>
-                        1 {tokenToSend?.symbol} = {fetchTokenRateState == 'pending' || !conversionRate ? <CircularProgress style={{ color: theme.text_color }} size={12} /> : formatNumber(Number(conversionRate))} {tokenToReceive?.symbol}
+                        1 {tokenToSend?.baseToken?.symbol} = {fetchTokenRateState == 'pending' || !conversionRate ? <CircularProgress style={{ color: theme.text_color }} size={12} /> : formatNumber(Number(conversionRate))} {tokenToReceive?.baseToken?.symbol}
                     </span>
                     <Box display='flex' alignItems='center' gap='.4rem'>
                         <SwipeDown fontSize='small' className={`transform transition-transform ${open ? 'rotate-180' : ''}`} />
@@ -90,7 +92,7 @@ const TokenSwapAnalytic = () => {
                             </Grid>
                         </Grid>
                         <Grid item display='flex'>
-                            <strong>{(!maxToPay || fetchQuoteState == 'pending') ? skeletonLoading : (Number(platformFeeAmount || 0) + Number(maxToPay)).toFixed(8)} </strong>&nbsp;<strong>{tokenToSend?.symbol}</strong>
+                            <strong>{(!maxToPay || fetchQuoteState == 'pending') ? skeletonLoading : (Number(platformFeeAmount || 0) + Number(maxToPay)).toFixed(8)} </strong>&nbsp;<strong>{tokenToSend?.baseToken?.symbol}</strong>
                         </Grid>
                     </Grid>
 
