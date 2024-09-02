@@ -75,7 +75,7 @@ export default function PumpChart() {
             </Box>
             <div className="flex flex-col gap-1 max-w-[100%]">
               <p className="text-[16px] max-sm:text-[12px] whitespace-nowrap max-lg:overflow-hidden text-ellipsis">
-                {pumpItem?.baseToken.symbol} ({pumpItem?.baseToken.name})
+                {pumpItem?.baseToken?.symbol} ({pumpItem?.baseToken?.name})
               </p>
               {/* <p
                 title={pumpItem?.social_links.description}
@@ -105,10 +105,10 @@ export default function PumpChart() {
               }
             </Box>
             <Box display="flex" alignItems="center" gap=".9rem">
-              <DexToolButton mintAddress={pumpItem?.baseToken.address} />
-              <JupiterButton mintAddress={pumpItem?.baseToken.address} />
-              <PumpfunButton mintAddress={pumpItem?.baseToken.address} />
-              <SolanaButton mintAddress={pumpItem?.baseToken.address} />
+              <DexToolButton mintAddress={pumpItem?.baseToken?.address} />
+              <JupiterButton mintAddress={pumpItem?.baseToken?.address} />
+              <PumpfunButton mintAddress={pumpItem?.baseToken?.address} />
+              <SolanaButton mintAddress={pumpItem?.baseToken?.address} />
             </Box>
           </Box>
           <Box
@@ -126,7 +126,7 @@ export default function PumpChart() {
           className="w-full lg:h-[397px] overflow-hidden aspect-video sm:border"
           style={{ borderColor: theme.text_color }} // Change border color
         > {
-            pumpItem?.pairAddress && <PumpChartEmbed tokenId={pumpItem.pairAddress} />
+            pumpItem?.pairAddress && <PumpChartEmbed tokenId={pumpItem?.pairAddress} />
           }
         </Box>
         <Box
