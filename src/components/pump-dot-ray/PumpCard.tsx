@@ -32,7 +32,7 @@ export default function PumpCard({ pumpItem, onOpenModal }: PumpCardProps) {
     setTokenToSendDecimal(9);
   }
   const pumpChartStatus = useAppSelector(state => state.pumpChart.status);
-  // const pumpItem = useAppSelector(state => state.pumpChart.pumpItem);
+  const pItem = useAppSelector(state => state.pumpChart.pumpItem);
 
   // console.log(pumpItem);
 
@@ -61,7 +61,7 @@ export default function PumpCard({ pumpItem, onOpenModal }: PumpCardProps) {
             <Box className="flex items-center">
               <Box className="relative flex items-center z-[-2]" sx={{ width: 66, height: 60 }}>
                 {pumpItem?.info?.imageUrl &&
-                  <img src={pumpItem?.info?.imageUrl} style={{ aspectRatio: '1/1' }} alt="Token Image" className="aspect-square rounded-full" height="100%" />
+                  <img src={pumpItem?.info?.imageUrl} style={{ aspectRatio: '1/1' }} alt="Token Image" className="rounded-full aspect-square" height="100%" />
                 }
               </Box>
             </Box>
@@ -70,7 +70,7 @@ export default function PumpCard({ pumpItem, onOpenModal }: PumpCardProps) {
             <p className="text-[16px]" style={{ fontFamily: 'JetBrains Mono' }}>{pumpItem?.baseToken?.name}</p>
             <p className="text-[12px]" style={{ fontFamily: 'JetBrains Mono' }}>{timeFrom(pumpItem?.pairCreatedAt)}</p>
           </div>
-          <div className="ml-auto mt-9 flex items-center">
+          <div className="flex items-center ml-auto mt-9">
             <span style={{ color: theme.text_color, fontWeight: 'bold', fontSize: '16px', fontFamily: 'JetBrains Mono' }}>100%</span>
           </div>
         </div>
@@ -107,7 +107,7 @@ export default function PumpCard({ pumpItem, onOpenModal }: PumpCardProps) {
           }}
         />
 
-        <Box className="flex justify-between items-center">
+        <Box className="flex items-center justify-between">
           <Box display="flex" alignItems="center" gap=".3rem">
             {pumpItem?.info?.socials.map((item: { type: string; url: string | undefined; }) => {
               if (item.type == "telegram") {
@@ -153,7 +153,7 @@ export default function PumpCard({ pumpItem, onOpenModal }: PumpCardProps) {
             }}
           >
             <Box display="flex" alignItems="center" gap={1}>
-              {pumpItem?.baseToken?.address === pumpItem.baseToken?.address && pumpChartStatus === 'pending' ? (
+              {pumpItem?.baseToken?.address === pItem?.baseToken?.address && pumpChartStatus === 'pending' ? (
                 <CircularProgress size={24} thickness={10} />
               ) : (
                 <ChartButton />

@@ -15,7 +15,7 @@ const PumpChartEmbed: React.FC<PumpChartEmbedProps> = ({ tokenId, backgroundColo
             <iframe id="dextools-widget"
                 title="DEXTools Trading Chart"
                 className='w-full h-full'
-                src={`https://www.dextools.io/widget-chart/en/solana/pe-light/${tokenId}?theme=light&chartType=2&chartResolution=30&drawingToolbars=false`}>
+                src={`https://www.dextools.io/widget-chart/en/solana/pe-light/${tokenId}?theme=light&chartType=1&chartResolution=30&drawingToolbars=false`}>
             </iframe>
         </div>
     );
