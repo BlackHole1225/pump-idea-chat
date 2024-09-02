@@ -90,6 +90,8 @@ export interface TokenSwapState {
     tokenToSend: PumpTokenItem | undefined;
     tokenToReceive: PumpTokenItem | undefined;
     amountToSend: number;
+    tokenToSendDecimal: number;
+    tokenToReceiveDecimal: number,
     amountToReceive: number | string;
     loading: boolean;
     error: string | null;
@@ -113,9 +115,13 @@ export interface TokenSwapState {
 }
 
 export const NativeToken = {
-    symbol: 'SOL',
-    logo: SolanaLogo,
-    address: 'So11111111111111111111111111111111111111112',
+    baseToken: {
+        symbol: 'SOL',
+        address: 'So11111111111111111111111111111111111111112',
+    },
+    info: {
+        imageUrl: SolanaLogo
+    },
     mint: 'So11111111111111111111111111111111111111112',
     decimals: 9
 }
@@ -129,6 +135,8 @@ export const tokenSwapInitialState: TokenSwapState = {
     tokenToSend: undefined,
     tokenToReceive: undefined,
     amountToSend: 0.0001,
+    tokenToSendDecimal: 9,
+    tokenToReceiveDecimal: 9,
     amountToReceive: 0,
     loading: false,
     error: null,
@@ -141,7 +149,7 @@ export const tokenSwapInitialState: TokenSwapState = {
     fetchQuoteMessage: null,
     quoteResponse: {} as any,
     platformFeeAmount: 0,
-    platformFeeToken: NativeToken.symbol,
+    platformFeeToken: NativeToken.baseToken.symbol,
     settings: {
         priorityOptions: [
             {

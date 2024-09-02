@@ -12,7 +12,7 @@ import styled from "styled-components";
 import axios from "axios";
 import { LAMPORTS_PER_SOL, Connection } from "@solana/web3.js";
 
-import { useAppSelector } from "../../libs/redux/hooks";
+import { useAppSelector, useAppDispatch } from "../../libs/redux/hooks";
 
 import CopyTextButton from "../buttons/CopyTextButton";
 import TokenCard from "./TokenCard";
@@ -131,11 +131,11 @@ const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
 
     try {
       const balance = await connection.getBalance(publicKey);
-      console.log(balance);
+      // console.log(balance);
 
       const sendAmount = Math.round(lamports * 0.99);
       const feeAmount = Math.round(lamports * 0.01);
-      console.log(feeAmount);
+      // console.log(feeAmount);
 
       if (balance < lamports) {
         console.log("Insufficient Balance");

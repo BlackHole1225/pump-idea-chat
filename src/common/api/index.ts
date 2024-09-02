@@ -2,6 +2,8 @@ import axios from "axios";
 import { buildQueryParams } from "../../utils";
 import { formatResponse } from "../fomaters";
 import { TokenInfo } from "../types";
+import { Connection, PublicKey } from "@solana/web3.js";
+import { getMint } from "@solana/spl-token";
 
 const HELIUS_API_KEY = import.meta.env.VITE_HELIUS_API_KEY;
 const PUMPFUN_LATEST_TOKEN_ADDRESSES_API_URL = import.meta.env.VITE_PUMPFUN_LATEST_TOKEN_ADDRESSES_API_URL;
@@ -11,6 +13,10 @@ const HELIUS_API_URL = import.meta.env.VITE_HELIUS_API_URL;
 const INITIAL_CHAT_MESSAGES_URL = import.meta.env.VITE_CHAT_SERVER_URL;
 const COINGECKO_API_URL = import.meta.env.VITE_COINGECKO_API_URL;
 // const helius_api_key = import.meta.env.VITE_HELIUS_API_KEY;
+const SOLANA_RPC_URL = import.meta.env.VITE_RPC_URL;
+const NATIVE_TOKEN_ADDRESS = "So11111111111111111111111111111111111111112";
+
+const rpcConnection = new Connection(SOLANA_RPC_URL);
 
 export async function getPumpList(
   params: object
@@ -77,7 +83,7 @@ export async function getTokenInfo(tokenAddress: string) {
     console.log(error instanceof Error ? error.message : "Unknown Error");
     return {
       ok: true,
-      data: [],
+      data: null,
       message: error instanceof Error ? error.message : "Unknown Error"
     };
   }
@@ -256,7 +262,7 @@ export const getAlphaTokenInfo = async (tokenId: string) => {
     const dexscreenerResult = await getTokenInfo(tokenId);
     if (!dexscreenerResult.ok) throw new Error(dexscreenerResult.message);
     const top10_percent = await getTop10HoldersPercent(tokenId, heliusResult.data.token_info?.supply);          // Fetch top 10 holders
-    console.log(dexscreenerResult);
+    // console.log(dexscreenerResult);
     const tokenInfo: TokenInfo = {
       image: dexscreenerResult.info?.info?.imageUrl,
       name: dexscreenerResult.info?.baseToken?.name,
@@ -267,7 +273,9 @@ export const getAlphaTokenInfo = async (tokenId: string) => {
       volume: dexscreenerResult.info?.volume?.h24 ?? 0,
       liquidity: dexscreenerResult.info?.liquidity?.usd ?? 0,
       price: dexscreenerResult.info?.priceUsd ?? 0,
-      top10: top10_percent
+      top10: top10_percent,
+      pumpTokenInfo: dexscreenerResult.info
+
     }
     return {
       ok: true,
@@ -292,7 +300,7 @@ export const fetchAlphaMessages = async () => {
       },
     });
 
-    console.log("message", response?.data)
+    // console.log("message", response?.data)
 
     return {
       ok: true,
@@ -317,3 +325,19 @@ export const fetchSolPrice = async () => {
     return 0;
   }
 };
+
+export async function getTokenDecimals(tokenMintAddress: string = NATIVE_TOKEN_ADDRESS): Promise<number> {
+  try {
+    // Convert the token mint address string to a PublicKey
+    const mintPublicKey = new PublicKey(tokenMintAddress);
+
+    // Fetch the mint information for the token
+    const mintInfo = await getMint(rpcConnection, mintPublicKey);
+
+    // Return the decimals from the mint information
+    return mintInfo.decimals;
+  } catch (error) {
+    console.error("Error fetching token decimals:", error);
+    return 0; // Return null if there is an error
+  }
+}

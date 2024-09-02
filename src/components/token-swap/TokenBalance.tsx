@@ -24,7 +24,7 @@ const TokenBalance: React.FC<TokenBalanceProps> = ({ walletAddress, tokenMintAdd
             }
             try {
                 const publicKey = new PublicKey(walletAddress);
-                if (tokenMintAddress && tokenMintAddress !== NativeToken.address) {
+                if (tokenMintAddress && tokenMintAddress !== NativeToken.baseToken.address) {
                     const tokenAccounts = await connection.getParsedTokenAccountsByOwner(publicKey, {
                         programId: new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'),
                     });

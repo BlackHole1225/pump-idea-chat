@@ -14,21 +14,23 @@ export default function TokenRateRefreshAndStatus() {
     tokenToSend,
     tokenToReceive,
     amountToSend,
-    settings
+    settings,
+    tokenToReceiveDecimal,
+    tokenToSendDecimal
   } = useAppSelector(state => state.tokenSwap);
 
 
   const fetchQuote = useCallback(() => {
-    if (tokenToSend?.address && tokenToReceive?.address && amountToSend) {
+    if (tokenToSend?.baseToken?.address && tokenToReceive?.baseToken?.address && amountToSend) {
       dispatch(fetchQuoteSwap({
-        fromMint: tokenToSend.address,
-        toMint: tokenToReceive.address,
-        amount: parseAmount(amountToSend, tokenToSend.decimals),
+        fromMint: tokenToSend?.baseToken?.address,
+        toMint: tokenToReceive?.baseToken?.address,
+        amount: parseAmount(amountToSend, tokenToSendDecimal),
         settings
       }));
       dispatch(fetchTokenRate({
-        fromMint: tokenToSend.address,
-        toMint: tokenToReceive.address
+        fromMint: tokenToSend.baseToken.address,
+        toMint: tokenToReceive.baseToken.address
       }));
     } else {
       dispatch(setAmountToReceive(0));

@@ -6,7 +6,7 @@ import PumpChart from '../pump-dot-ray/PumpChart';
 export default function PumpDotRay() {
 
     const isPumpChartShown = useAppSelector(state => state.pumpChart.isPumpChartShown);
-    console.log('isPumpChartShown', isPumpChartShown);
+    // console.log('isPumpChartShown', isPumpChartShown);
     return (
         <Box width='100%' height={'100%'}>
             {isPumpChartShown ? <PumpChart /> : <TokenExplorer />}

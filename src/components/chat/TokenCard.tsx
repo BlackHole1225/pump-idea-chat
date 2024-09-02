@@ -1,9 +1,11 @@
 import React, { FC } from "react";
 import { Box, Button, Avatar } from "@mui/material";
 import { styled } from "@mui/system";
-import { useAppSelector } from "../../libs/redux/hooks";
+import { useAppSelector, useAppDispatch } from "../../libs/redux/hooks";
 import { TokenInfo } from "../../common/types";
 import { formatNumber, formatPrice, formatPercent, formatTimestamp, formatAddress } from "../../utils/format";
+import { setSelectedtokenToReceive, setTokenToReceiveDecimal, setTokenToSendDecimal } from "../../libs/redux/slices/token-swap-slice";
+import { getTokenDecimals } from "../../common/api";
 // import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 // import { faFingerprint, faSync } from '@fortawesome/free-solid-svg-icons';
 
@@ -35,7 +37,13 @@ interface TokenCardProps {
 
 const TokenCard: FC<TokenCardProps> = ({ tokenInfo }) => {
   const theme = useAppSelector((state) => state.theme.current.styles);
-
+  const dispatch = useAppDispatch();
+  const atClickBuy = async () => {
+    // console.log("token info", tokenInfo);
+    dispatch(setSelectedtokenToReceive(tokenInfo.pumpTokenInfo));
+    setTokenToReceiveDecimal(await getTokenDecimals(tokenInfo.pumpTokenInfo?.baseToken?.address));
+    setTokenToSendDecimal(9);
+  }
   return (
     <Box
       style={{
@@ -129,6 +137,7 @@ const TokenCard: FC<TokenCardProps> = ({ tokenInfo }) => {
       ></Box>
 
       <BuyButton
+        onClick={atClickBuy}
         sx={{
           backgroundColor: theme.alpha_token_card?.text_color,
           color: theme.alpha_token_card?.bgColor,
@@ -146,7 +155,7 @@ const TokenCard: FC<TokenCardProps> = ({ tokenInfo }) => {
         >
           {/* <FontAwesomeIcon icon={faFingerprint} size="1x"/> */}
         </Box>
-        BUY
+        BUYTTT
       </BuyButton>
     </Box>
   );

@@ -92,6 +92,7 @@ export type TokenInfo = {
   liquidity: number; // USD value of liquidity
   price: number; // Current price in USD
   top10: number; // Percentage held by the top 10 holders
+  pumpTokenInfo: PumpTokenItem | null | undefined
 };
 
 

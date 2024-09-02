@@ -32,7 +32,9 @@ const TokenswapStack: React.FC = () => {
     quoteResponse,
     fetchTokenRateState,
     tokenSwapState,
-    settings
+    settings,
+    tokenToSendDecimal,
+    tokenToReceiveDecimal
   } = useAppSelector(state => state.tokenSwap);
   const [isMinimized, setIsMinimized] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -48,15 +50,17 @@ const TokenswapStack: React.FC = () => {
   const RPC_URL = import.meta.env.VITE_RPC_URL;
   const connection = new Connection(RPC_URL, 'confirmed');
 
+  // console.log("tokenToSend - TokenToReceive", tokenToSend, tokenToReceive);
+
   const handleSwap = async () => {
     if (tokenSwapState !== 'pending') {
       dispatch(handleTokenSwap({
         connection,
         wallet,
         quoteResponse,
-        fromMint: String(tokenToSend?.address),
-        toMint: String(tokenToReceive?.address),
-        amount: parseAmount(amountToSend, Number(tokenToSend?.decimals)),
+        fromMint: String(tokenToSend?.baseToken?.address),
+        toMint: String(tokenToReceive?.baseToken?.address),
+        amount: parseAmount(amountToSend, Number(tokenToSendDecimal)),
         settings
       }));
     }
@@ -121,10 +125,10 @@ const TokenswapStack: React.FC = () => {
       return <div className='flex items-center gap-2'>Pending<CircularProgress style={{ color: theme.bgColor == '#0000FF' ? theme.bgColor : theme.text_color }} size={20} thickness={10} /></div>
     if (loading)
       return <CircularProgress size={25} />;
-    if (tokenToReceive?.symbol?.toUpperCase?.() === 'SOL') {
+    if (tokenToReceive?.baseToken?.symbol?.toUpperCase?.() === 'SOL') {
       return "SELL";
     }
-    if (tokenToSend?.symbol?.toUpperCase?.() === 'SOL') {
+    if (tokenToSend?.baseToken?.symbol?.toUpperCase?.() === 'SOL') {
       return "BUY";
     }
   };
@@ -218,7 +222,7 @@ const TokenswapStack: React.FC = () => {
                 }}
               />
               <TabPanel value="1">
-                {!isMinimized && ((!tokenToReceive?.symbol || !tokenToSend?.symbol) ? Loading : (
+                {!isMinimized && ((!tokenToReceive?.baseToken?.symbol || !tokenToSend?.baseToken?.symbol) ? Loading : (
                   <motion.div
                     initial={{ x: -100 }}
                     animate={{ x: 0 }}

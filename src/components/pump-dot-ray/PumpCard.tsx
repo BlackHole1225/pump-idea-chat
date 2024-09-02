@@ -15,6 +15,8 @@ import SolanaButton from "../buttons/SolanaButton";
 import { timeFrom } from "../../utils";
 import JupButton from "../buttons/JupButton";
 import ChartButton from "../buttons/ChartButton";
+import { setTokenToReceiveDecimal, setTokenToSendDecimal } from "../../libs/redux/slices/token-swap-slice";
+import { getTokenDecimals } from "../../common/api";
 
 interface PumpCardProps {
   pumpItem: PumpTokenItem; // Define the type for the pump item
@@ -24,7 +26,11 @@ interface PumpCardProps {
 export default function PumpCard({ pumpItem, onOpenModal }: PumpCardProps) {
   const theme = useAppSelector(state => state.theme.current.styles);
   const dispatch = useAppDispatch();
-  const atClickBuy = () => dispatch(setSelectedtokenToReceive(pumpItem));
+  const atClickBuy = async () => {
+    dispatch(setSelectedtokenToReceive(pumpItem));
+    setTokenToReceiveDecimal(await getTokenDecimals(pumpItem?.baseToken?.address));
+    setTokenToSendDecimal(9);
+  }
   const pumpChartStatus = useAppSelector(state => state.pumpChart.status);
   // const pumpItem = useAppSelector(state => state.pumpChart.pumpItem);
 
