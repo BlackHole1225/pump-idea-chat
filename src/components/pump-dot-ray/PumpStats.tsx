@@ -1,5 +1,5 @@
 import { Box } from '@mui/material'
-import { formatNumber } from '../../utils/format'
+import { formatNumber, formatPrice } from '../../utils/format'
 import { useAppSelector } from '../../libs/redux/hooks'
 import { calculatePumpTokenChanges, shortenString } from '../../utils'
 import { ReactNode } from 'react'
@@ -28,7 +28,7 @@ export default function PumpStats() {
 
     return (
         <Box className='flex flex-col gap-4 ' style={{ fontFamily: 'JetBrains Mono, monospace' }}>
-            <Box className='flex justify-between centre text-center'>
+            <Box className='flex justify-between text-center centre'>
                 <Box className='flex flex-col'>
                     <strong style={{ color: theme.text_color }}>5m</strong>
                     <small style={{ color: getTextColor(percentage_changes.change5m) }}>{percentage_changes.change5m}%</small>
@@ -47,20 +47,20 @@ export default function PumpStats() {
                 </Box>
             </Box>
             <div style={{ backgroundImage: `linear-gradient(to right, transparent, ${theme.text_color}, transparent)`, height: 1 }}></div>
-            <Box display='flex' className=' flex-col  gap-4' width={'100%'}>
-                <InfoItem left="ADDRESS" right={<CopyTextButton buttonText={shortenString(String(pumpItem?.address))} textToCopy={String(pumpItem?.address)} />} />
+            <Box display='flex' className='flex-col gap-4 ' width={'100%'}>
+                <InfoItem left="ADDRESS" right={<CopyTextButton buttonText={shortenString(String(pumpItem?.baseToken.address))} textToCopy={String(pumpItem?.baseToken.address)} />} />
                 <div style={{ backgroundImage: `linear-gradient(to right, transparent, ${theme.text_color}, transparent)`, height: 1.5 }}></div>
-                <InfoItem left="PRICE" right={`$${formatNumber(pumpItem?.price ?? 0)}`} />
+                <InfoItem left="PRICE" right={`$${formatPrice(Number(pumpItem?.priceUsd ?? 0))}`} />
                 <div style={{ backgroundImage: `linear-gradient(to right, transparent, ${theme.text_color}, transparent)`, height: 1.5 }}></div>
-                <InfoItem left="MCAP" right={`$${formatNumber(pumpItem?.market_cap ?? 0)}`} />
+                <InfoItem left="MCAP" right={`$${formatNumber(pumpItem?.fdv ?? 0)}`} />
                 <div style={{ backgroundImage: `linear-gradient(to right, transparent, ${theme.text_color}, transparent)`, height: 1.5 }}></div>
-                <InfoItem left="LIQUIDITY" right={`$${formatNumber(Number(pumpItem?.pool_info.liquidity))}`} />
+                <InfoItem left="LIQUIDITY" right={`$${formatNumber(Number(pumpItem?.liquidity?.usd))}`} />
                 <div style={{ backgroundImage: `linear-gradient(to right, transparent, ${theme.text_color}, transparent)`, height: 1.5 }}></div>
-                <InfoItem left="VOLUME" right={`$${formatNumber(pumpItem?.volume_24h ?? 0)}`} />
+                <InfoItem left="VOLUME" right={`$${formatNumber(pumpItem?.volume?.h24 ?? 0)}`} />
                 <div style={{ backgroundImage: `linear-gradient(to right, transparent, ${theme.text_color}, transparent)`, height: 3 }}></div>
-                <InfoItem left="HOLDERS" right={`${formatNumber(pumpItem?.holder_count ?? 0)}`} />
-                {/* <div style={{ backgroundImage: `linear-gradient(to right, transparent, ${theme.text_color}, transparent)`, height: 1 }}></div>
-                <InfoItem left="DEV HOLDING" right={`${pumpItem.dev_holding_percentage?.toFixed(2)}%`} /> */}
+                <InfoItem left="HOLDERS" right={`${formatNumber(0)}`} />
+                <div style={{ backgroundImage: `linear-gradient(to right, transparent, ${theme.text_color}, transparent)`, height: 1 }}></div>
+                <InfoItem left="DEV HOLDING" right={`${0}%`} />
             </Box>
         </Box>
     )
