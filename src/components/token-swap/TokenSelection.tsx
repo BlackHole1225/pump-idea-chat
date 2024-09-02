@@ -26,14 +26,14 @@ const TokenSelection: React.FC<{
 
     return (
         <Collapse in={isOpen}>
-            <Box ref={containerRef} className="active rounded-lg   mt-4 flex " style={{ maxHeight: '20vh', color: theme.bgColor == '#0000FF' ? theme.bgColor : theme.bgColor == '#FFF' ? theme.active_color : 'whitesmoke' }} >
+            <Box ref={containerRef} className="flex mt-4 rounded-lg active " style={{ maxHeight: '20vh', color: theme.bgColor == '#0000FF' ? theme.bgColor : theme.bgColor == '#FFF' ? theme.active_color : 'whitesmoke' }} >
                 <Box flexDirection="column" display='flex' overflow='hidden' width='100%' >
                     <Grid item>
                         <InputBase
                             placeholder="Find tokens by name or address"
-                            startAdornment={<SearchIcon className='text-yellow-100 mr-2' />}
+                            startAdornment={<SearchIcon className='mr-2 text-yellow-100' />}
                             fullWidth
-                            style={{ color: theme.bgColor == '#0000FF' ? theme.bgColor : theme.bgColor == '#FFF' ? theme.active_color: 'white' }}
+                            style={{ color: theme.bgColor == '#0000FF' ? theme.bgColor : theme.bgColor == '#FFF' ? theme.active_color : 'white' }}
                         />
                     </Grid>
                     <Box display='flex' flexDirection='column' gap='.5rem' width='100%' className=' no-scrollbar' overflow='auto'>
@@ -41,11 +41,16 @@ const TokenSelection: React.FC<{
                             <MenuItem key={token.baseToken.address} onClick={() => onTokenSelect(token)} value={token.baseToken.symbol} style={{ paddingInline: 0, borderRadius: '10px' }}   >
                                 <Box display='flex' flexDirection='column' width='100%' gap='1rem'>
                                     <Box display='flex' alignItems='center' flexDirection='row' width='100%' >
-                                        <img
-                                            className="w-7 h-7 mr-2 rounded-full aspect-square"
-                                            src={token.info.imageUrl}
-                                            alt={`${token.baseToken.symbol} token`}
-                                        />
+                                        {
+                                            token.info.imageUrl ?
+                                                <img
+                                                    className="mr-2 rounded-full w-7 h-7 aspect-square"
+                                                    src={token.info.imageUrl}
+                                                    alt={`${token.baseToken.symbol} token`}
+                                                /> :
+                                                <div className='className="mr-2 rounded-full w-7 h-7 aspect-square'>
+                                                </div>
+                                        }
                                         <Box display='flex' alignItems='center' justifyContent='space-between' width='100%'>
                                             <Box display='flex' flexDirection='column'>
                                                 <small style={{ fontSize: 12 }}>{token.baseToken.symbol}</small>
