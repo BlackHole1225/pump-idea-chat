@@ -13,7 +13,7 @@ export function formatPrice(price: number) {
 }
 
 export function formatPercent(val: string | number) {
-  return (Number(val) * 100).toFixed(2) + "%"
+  return (Number(val)).toFixed(2) + "%"
 }
 
 export const getBrowserLocale = (): string => navigator.language || 'en-US';

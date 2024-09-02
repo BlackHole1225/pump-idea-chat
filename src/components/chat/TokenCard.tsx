@@ -2,6 +2,8 @@ import React, { FC } from "react";
 import { Box, Button, Avatar } from "@mui/material";
 import { styled } from "@mui/system";
 import { useAppSelector } from "../../libs/redux/hooks";
+import { TokenInfo } from "../../common/types";
+import { formatNumber, formatPrice, formatPercent, formatTimestamp, formatAddress } from "../../utils/format";
 // import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 // import { faFingerprint, faSync } from '@fortawesome/free-solid-svg-icons';
 
@@ -28,7 +30,7 @@ const StatBox = styled(Box)({
 });
 
 interface TokenCardProps {
-  tokenInfo: any
+  tokenInfo: TokenInfo
 }
 
 const TokenCard: FC<TokenCardProps> = ({ tokenInfo }) => {
@@ -83,7 +85,7 @@ const TokenCard: FC<TokenCardProps> = ({ tokenInfo }) => {
       <div className="flex justify-between py-2">
         <StatBox>
           <p className="title">MCAP</p>
-          <p className="value">${tokenInfo.mcap}</p>
+          <p className="value">${formatNumber(tokenInfo.mcap)}</p>
         </StatBox>
         <StatBox>
           <p className="title">HOLDERS</p>
@@ -91,19 +93,19 @@ const TokenCard: FC<TokenCardProps> = ({ tokenInfo }) => {
         </StatBox>
         <StatBox>
           <p className="title">VOLUME</p>
-          <p className="value">$4.5M</p>
+          <p className="value">${formatNumber(tokenInfo.volume)}</p>
         </StatBox>
         <StatBox>
           <p className="title">LIQUIDITY</p>
-          <p className="value">$1.1M</p>
+          <p className="value">${formatNumber(tokenInfo.mcap)}</p>
         </StatBox>
-        <StatBox>
+        {/* <StatBox>
           <p className="title">ATH</p>
           <p className="value">$45M</p>
-        </StatBox>
+        </StatBox> */}
         <StatBox>
           <p className="title">TOP 10</p>
-          <p className="value">{tokenInfo.top10}%</p>
+          <p className="value">{formatPercent(tokenInfo.top10)}</p>
         </StatBox>
 
         <StatBox>
@@ -111,10 +113,10 @@ const TokenCard: FC<TokenCardProps> = ({ tokenInfo }) => {
           <p className="value">{"Enabled"}</p>
         </StatBox>
 
-        <StatBox>
+        {/* <StatBox>
           <p className="title">LP</p>
           <p className="value">100% burnt</p>
-        </StatBox>
+        </StatBox> */}
       </div>
 
       <Box

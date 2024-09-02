@@ -81,6 +81,19 @@ export type PumpTokenItem = {
   };
 };
 
+export type TokenInfo = {
+  image: string | undefined; // URL of the token image, can be undefined if not present
+  name: string | undefined;  // Token name, can be undefined if not present
+  symbol: string | undefined; // Token symbol, can be undefined if not present
+  description: string | undefined; // Description of the token, can be undefined if not present
+  type: string | undefined; // Token standard/type, can be undefined if not present
+  mcap: number; // Market capitalization (fully diluted valuation)
+  volume: number; // 24-hour trading volume
+  liquidity: number; // USD value of liquidity
+  price: number; // Current price in USD
+  top10: number; // Percentage held by the top 10 holders
+};
+
 
 export type IFilterTypes = {
   min: number | null;
