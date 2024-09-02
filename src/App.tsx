@@ -111,7 +111,7 @@ export default function App() {
       }}
     >
       <Box
-        className="fixed -z-10 left-0 top-0 h-full w-full overflow-hidden flex flex-col justify-between"
+        className="fixed top-0 left-0 flex flex-col justify-between w-full h-full overflow-hidden -z-10"
         style={{
           transform: isMobile ? "scale(2)" : "scale(1.5)",
         }}
