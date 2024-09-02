@@ -624,7 +624,7 @@ export default function AlphaChannel() {
                 </Box>
               </Box>
             </Box>
-            {call.tokenInfo && <TokenCard tokenInfo={call.tokenInfo} />}
+            {call.tokenInfo && <TokenCard tokenItem={call.tokenInfo} />}
           </Box>
         ))}
       </Stack>
