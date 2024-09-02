@@ -56,7 +56,7 @@ const pumpChartSlice = createSlice({
             state.status = 'success';
             state.isPumpChartShown = true
             // state.data = action.payload;
-            state.pumpItem = action.payload
+            // state.pumpItem = action.payload
         });
         builder.addCase(fetchPumpTokenDetails.rejected, (state, action) => {
             state.status = 'error';

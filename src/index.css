@@ -99,12 +99,6 @@ input[type="number"]::-webkit-inner-spin-button {
   overflow: hidden;
 }
 
-<<<<<<<
-  HEAD
-  =======>>>>>>>1260b9ce4eb2223857c3ecbad538379e558b1f6e
-  .no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
 
 @keyframes scroll {
   from {

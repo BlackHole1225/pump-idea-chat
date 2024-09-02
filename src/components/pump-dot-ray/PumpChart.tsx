@@ -21,9 +21,10 @@ import JupiterButton from "../buttons/JupiterButton";
 //import DexScreenerButton from "../buttons/DexScreenerButton";
 import DexToolButton from "../buttons/DexToolButton";
 import SolanaButton from "../buttons/SolanaButton";
+import { PumpTokenItem } from "../../common/types";
 
 export default function PumpChart() {
-  const pumpItem: any = useAppSelector((state) => state.pumpChart.pumpItem);
+  const pumpItem = useAppSelector((state) => state.pumpChart.pumpItem);
   const theme = useAppSelector((state) => state.theme.current.styles);
   const dispatch = useAppDispatch();
   const atClickBuy = () => dispatch(setSelectedtokenToReceive(pumpItem));
@@ -35,7 +36,6 @@ export default function PumpChart() {
     event;
     setValue(newValue);
   };
-  console.log(pumpItem);
   return (
     <motion.div
       initial={{ x: 100, opacity: 0 }}
@@ -46,66 +46,69 @@ export default function PumpChart() {
         stiffness: 300,
         damping: 30,
       }}
-      className="gap-4 grid lg:grid-cols-3 max-lg:flex max-lg:flex-col overflow-auto max-lg:h-full no-scrollbar "
+      className="grid gap-4 overflow-auto lg:grid-cols-3 max-lg:flex max-lg:flex-col max-lg:h-full no-scrollbar "
     >
       <PumpDetailsModal
         onRequestClose={() => setIsModalShown(false)}
         isOpen={isModalShown}
         pumpItem={pumpItem}
       />
-      <Box className="md:col-span-2 flex flex-col gap-4 h-max ">
+      <Box className="flex flex-col gap-4 md:col-span-2 h-max ">
         <Box
-          className="w-full grid grid-cols-3 sm:p-4 h-max sm:border max-sm:flex max-sm:flex-col relative"
+          className="relative grid w-full grid-cols-3 sm:p-4 h-max sm:border max-sm:flex max-sm:flex-col"
           style={{ borderColor: theme.text_color }} // Change border color
         >
           <div className="flex items-center gap-2 col-span-2 max-w-[100%] overflow-hidden">
-            <Box className="relative hover:cursor-pointer z-10">
+            <Box className="relative z-10 hover:cursor-pointer">
               <Box
                 onClick={() => setIsModalShown(true)}
                 className="relative flex items-center z-[-2]"
                 sx={{ width: 66, height: 66 }}
               >
                 <img
-                  src={pumpItem?.logo}
+                  src={pumpItem?.info?.imageUrl}
                   style={{ aspectRatio: "1/1" }}
                   alt="Token Image"
-                  className="aspect-square rounded-full"
+                  className="rounded-full aspect-square"
                 />
               </Box>
             </Box>
             <div className="flex flex-col gap-1 max-w-[100%]">
               <p className="text-[16px] max-sm:text-[12px] whitespace-nowrap max-lg:overflow-hidden text-ellipsis">
-                {pumpItem?.symbol} ({pumpItem?.name})
+                {pumpItem?.baseToken.symbol} ({pumpItem?.baseToken.name})
               </p>
-              <p
+              {/* <p
                 title={pumpItem?.social_links.description}
                 className="text-[11px] max-sm:text-[9px] whitespace-nowrap  overflow-hidden w-[80%] text-ellipsis"
               >
                 {pumpItem?.social_links.description}
-              </p>
+              </p> */}
             </div>
           </div>
           <Box
             alignItems="flex-end"
-            className="flex flex-col gap-3 max-sm:mt-4 max-sm:p-2 max-sm:flex-row max-sm:flex max-sm:justify-between col-span-1 justify-center align-middle max-sm:border"
+            className="flex flex-col justify-center col-span-1 gap-3 align-middle max-sm:mt-4 max-sm:p-2 max-sm:flex-row max-sm:flex max-sm:justify-between max-sm:border"
             style={{ borderColor: theme.text_color }} // Change border color
           >
             <Box display="flex" alignItems="center" gap=".9rem">
-              <TelegramButton url={pumpItem?.social_links?.telegram} />
-              <XButton
-                username={`${
-                  pumpItem?.social_links.twitter_username
-                    ? "https://x.com/" + pumpItem?.social_links.twitter_username
-                    : undefined
-                }`}
-              />
-              <WebsiteButton url={pumpItem?.social_links?.website} />
+              {
+                pumpItem?.info.socials.map((social, index) => (
+                  social.type === "telegram" ? <TelegramButton key={index} url={social.url} /> :
+                    social.type === "twitter" ? <XButton key={index} username={social.url} /> :
+                      null
+                ))
+              }
+              {
+                pumpItem?.info.websites.map((url, index) => (
+                  <WebsiteButton key={index} url={url} />
+                ))
+              }
             </Box>
             <Box display="flex" alignItems="center" gap=".9rem">
-              <DexToolButton mintAddress={pumpItem?.address} />
-              <JupiterButton mintAddress={pumpItem?.address} />
-              <PumpfunButton mintAddress={pumpItem?.address} />
-              <SolanaButton mintAddress={pumpItem?.address} />
+              <DexToolButton mintAddress={pumpItem?.baseToken.address} />
+              <JupiterButton mintAddress={pumpItem?.baseToken.address} />
+              <PumpfunButton mintAddress={pumpItem?.baseToken.address} />
+              <SolanaButton mintAddress={pumpItem?.baseToken.address} />
             </Box>
           </Box>
           <Box
@@ -122,10 +125,9 @@ export default function PumpChart() {
         <Box
           className="w-full lg:h-[397px] overflow-hidden aspect-video sm:border"
           style={{ borderColor: theme.text_color }} // Change border color
-        >
-          <PumpChartEmbed
-            src={`https://gmgn.ai/sol/token/${pumpItem?.address}?embled=1`}
-          />
+        > {
+            pumpItem?.pairAddress && <PumpChartEmbed tokenId={pumpItem.pairAddress} />
+          }
         </Box>
         <Box
           className="w-full"
@@ -134,7 +136,7 @@ export default function PumpChart() {
           <Box className="grid grid-cols-3 gap-4">
             <Button
               variant="outlined"
-              className="flex align-middle gap-2 justify-center"
+              className="flex justify-center gap-2 align-middle"
               style={{
                 alignItems: "center",
                 borderRadius: 0,
@@ -156,7 +158,7 @@ export default function PumpChart() {
               }}
               disableElevation
               variant="contained"
-              className="flex col-span-2 align-middle gap-2 justify-center"
+              className="flex justify-center col-span-2 gap-2 align-middle"
               onClick={atClickBuy}
             >
               <JupButton />
@@ -166,7 +168,7 @@ export default function PumpChart() {
         </Box>
       </Box>
       <Box
-        className="p-4 md:col-span-1 lg:w-full lg:h-full border"
+        className="p-4 border md:col-span-1 lg:w-full lg:h-full"
         style={{ borderColor: theme.text_color }} // Change border color
       >
         <Box sx={{ width: "100%", typography: "body1" }}>

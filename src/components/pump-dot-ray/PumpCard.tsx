@@ -16,16 +16,23 @@ import { timeFrom } from "../../utils";
 import JupButton from "../buttons/JupButton";
 import ChartButton from "../buttons/ChartButton";
 
-export default function PumpCard(pump: PumpTokenItem & { onOpenModal: (item: PumpTokenItem) => void }) {
+interface PumpCardProps {
+  pumpItem: PumpTokenItem; // Define the type for the pump item
+  onOpenModal: (pumpItem: PumpTokenItem) => void; // Define a more specific function type
+}
+
+export default function PumpCard({ pumpItem, onOpenModal }: PumpCardProps) {
   const theme = useAppSelector(state => state.theme.current.styles);
   const dispatch = useAppDispatch();
-  const atClickBuy = () => dispatch(setSelectedtokenToReceive(pump));
+  const atClickBuy = () => dispatch(setSelectedtokenToReceive(pumpItem));
   const pumpChartStatus = useAppSelector(state => state.pumpChart.status);
-  const pumpItem = useAppSelector(state => state.pumpChart.pumpItem);
+  // const pumpItem = useAppSelector(state => state.pumpChart.pumpItem);
+
+  // console.log(pumpItem);
 
   const handleLoadAndShowChart = () => {
-    dispatch(setPumpTokenItem(pump));
-    dispatch(fetchPumpTokenDetails(pump.address));
+    dispatch(setPumpTokenItem(pumpItem));
+    dispatch(fetchPumpTokenDetails(pumpItem.baseToken.address));
   };
 
   return (
@@ -42,17 +49,20 @@ export default function PumpCard(pump: PumpTokenItem & { onOpenModal: (item: Pum
       }}
     >
       <div className="flex flex-col gap-[10px] p-[8px]">
+        {/* <p>{pump?.info?.imageUrl}</p> */}
         <div className="flex items-center gap-1">
           <Box className="relative z-10">
             <Box className="flex items-center">
               <Box className="relative flex items-center z-[-2]" sx={{ width: 66, height: 60 }}>
-                <img src={pump?.logo} style={{ aspectRatio: '1/1' }} alt="Token Image" className="aspect-square rounded-full" height="100%" />
+                {pumpItem?.info?.imageUrl &&
+                  <img src={pumpItem?.info?.imageUrl} style={{ aspectRatio: '1/1' }} alt="Token Image" className="aspect-square rounded-full" height="100%" />
+                }
               </Box>
             </Box>
           </Box>
           <div className="flex flex-col gap-[2px]">
-            <p className="text-[16px]" style={{ fontFamily: 'JetBrains Mono' }}>{pump.name}</p>
-            <p className="text-[12px]" style={{ fontFamily: 'JetBrains Mono' }}>{timeFrom(pump.creation_timestamp)}</p>
+            <p className="text-[16px]" style={{ fontFamily: 'JetBrains Mono' }}>{pumpItem?.baseToken?.name}</p>
+            <p className="text-[12px]" style={{ fontFamily: 'JetBrains Mono' }}>{timeFrom(pumpItem?.pairCreatedAt)}</p>
           </div>
           <div className="ml-auto mt-9 flex items-center">
             <span style={{ color: theme.text_color, fontWeight: 'bold', fontSize: '16px', fontFamily: 'JetBrains Mono' }}>100%</span>
@@ -62,25 +72,25 @@ export default function PumpCard(pump: PumpTokenItem & { onOpenModal: (item: Pum
         <LinearProgress
           variant="determinate"
           style={{ background: theme.text_color, height: '1rem', borderRadius: '50px', border: 'solid thin' }}
-          value={Number(pump?.price ?? 1) * 100}
+          value={Number(pumpItem.priceUsd ?? 1) * 100}
         />
 
         <div className="flex justify-between w-[100%] mx-auto">
           <div className="flex flex-col text-center">
             <p className="text-[12px]" style={{ fontFamily: 'JetBrains Mono' }}>mcap</p>
-            <p className="text-[16px]" style={{ fontFamily: 'JetBrains Mono' }}>${formatNumber(pump?.market_cap)}</p>
+            <p className="text-[16px]" style={{ fontFamily: 'JetBrains Mono' }}>${formatNumber(pumpItem?.fdv ?? 0)}</p>
           </div>
           <div className="flex flex-col text-center">
             <p className="text-[12px]" style={{ fontFamily: 'JetBrains Mono' }}>holders</p>
-            <p className="text-[16px]" style={{ fontFamily: 'JetBrains Mono' }}>{formatNumber(pump?.holder_count ?? 0)}</p>
+            <p className="text-[16px]" style={{ fontFamily: 'JetBrains Mono' }}>{formatNumber(0)}</p>
           </div>
           <div className="flex flex-col text-center">
             <p className="text-[12px]" style={{ fontFamily: 'JetBrains Mono' }}>volume</p>
-            <p className="text-[16px]" style={{ fontFamily: 'JetBrains Mono' }}>${formatNumber(pump?.volume_24h)}</p>
+            <p className="text-[16px]" style={{ fontFamily: 'JetBrains Mono' }}>${formatNumber(pumpItem?.volume?.h24)}</p>
           </div>
           <div className="flex flex-col text-center">
             <p className="text-[12px]" style={{ fontFamily: 'JetBrains Mono' }}>liquidity</p>
-            <p className="text-[16px]" style={{ fontFamily: 'JetBrains Mono' }}>${formatNumber(pump.liquidity)}</p>
+            <p className="text-[16px]" style={{ fontFamily: 'JetBrains Mono' }}>${formatNumber(pumpItem?.liquidity?.usd)}</p>
           </div>
         </div>
 
@@ -93,16 +103,23 @@ export default function PumpCard(pump: PumpTokenItem & { onOpenModal: (item: Pum
 
         <Box className="flex justify-between items-center">
           <Box display="flex" alignItems="center" gap=".3rem">
-            <TelegramButton url={pump?.social_links?.telegram} />
-            <XButton username={`${pump?.social_links.twitter_username}`} />
-            <WebsiteButton url={pump?.social_links?.website} />
+            {pumpItem?.info?.socials.map((item: { type: string; url: string | undefined; }) => {
+              if (item.type == "telegram") {
+                return <TelegramButton url={item?.url} />
+              }
+              if (item.type == "twitter") {
+                <XButton username={item?.url} />
+              }
+            })}
+
+
+            <WebsiteButton url={pumpItem?.info?.websites[0]} />
           </Box>
           <Box display="flex" alignItems="center" gap=".3rem">
-            
-            <DexToolButton mintAddress={pump?.address} />
-            <JupiterButton mintAddress={pump?.address} />
-            <PumpfunButton mintAddress={pump?.address} />
-            <SolanaButton mintAddress={pump?.address} />
+            <DexToolButton mintAddress={pumpItem?.baseToken?.address} />
+            <JupiterButton mintAddress={pumpItem?.baseToken?.address} />
+            <PumpfunButton mintAddress={pumpItem?.baseToken?.address} />
+            <SolanaButton mintAddress={pumpItem?.baseToken?.address} />
           </Box>
         </Box>
 
@@ -130,7 +147,7 @@ export default function PumpCard(pump: PumpTokenItem & { onOpenModal: (item: Pum
             }}
           >
             <Box display="flex" alignItems="center" gap={1}>
-              {pumpItem?.address === pump.address && pumpChartStatus === 'pending' ? (
+              {pumpItem?.baseToken?.address === pumpItem.baseToken?.address && pumpChartStatus === 'pending' ? (
                 <CircularProgress size={24} thickness={10} />
               ) : (
                 <ChartButton />
