@@ -91,18 +91,21 @@ export async function getTokenInfo(tokenAddress: string) {
 
 export async function getAllPumpList(
   filter_listing: URLSearchParams,
-  filter_migrated: URLSearchParams
+  filter_migrated: URLSearchParams,
+  callback?: (val: any) => void
 ) {
   try {
     // console.log("filter_listing", filter_listing)
     const result = await getPumpList(filter_migrated);
     // console.log(result);
-    if(result.ok) {
+    if (result.ok) {
       // Fetch token info for all tokens in parallel
       const tokenInfos = await Promise.all(
         result.tokens.map(async (token: string) => {
           const result = await getTokenInfo(token); // Await each getTokenInfo call
           if (result.ok) {
+            if (result?.info)
+              callback && callback(result.info)
             return result.info; // Return token info if the result is OK
           }
           return undefined; // Explicitly return undefined if not OK

@@ -68,10 +68,11 @@ export function calculatePercentageChange(currentPrice: number, pastPrice: numbe
 }
 
 export function calculatePumpTokenChanges(token: PumpTokenItem): { change5m: string, change1h: string, change6h: string, change24h: string } {
-    const change5m = formatNumber(calculatePercentageChange(token.price, token.price_5m));
-    const change1h = formatNumber(calculatePercentageChange(token.price, token.price_1h));
-    const change6h = formatNumber(calculatePercentageChange(token.price, token.price_6h));
-    const change24h = formatNumber(calculatePercentageChange(token.price, token.price_24h));
+    const price = Number(token.liquidity.usd)
+    const change5m = formatNumber(calculatePercentageChange(price, token.volume.m5));
+    const change1h = formatNumber(calculatePercentageChange(price, token.volume.h1));
+    const change6h = formatNumber(calculatePercentageChange(price, token.volume.h6));
+    const change24h = formatNumber(calculatePercentageChange(price, token.volume.h24));
 
     return { change5m, change1h, change6h, change24h };
 }

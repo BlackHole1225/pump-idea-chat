@@ -177,8 +177,8 @@ const TokenswapStack: React.FC = () => {
         }}
       >
         <TabContext value={value}  >
-          <Box sx={{ background: theme.bgColor == '#0000FF' ? '#0000FF' : theme.pump_card_bg }} className=' flex items-center justify-between gap-4  px-4'>
-            <Box className=' flex-grow' >
+          <Box sx={{ background: theme.bgColor == '#0000FF' ? '#0000FF' : theme.pump_card_bg }} className='flex items-center justify-between gap-4 px-4 '>
+            <Box className='flex-grow ' >
               <TabList TabIndicatorProps={{ style: { display: 'none' } }} onChange={handleChange}>
                 <Tab
                   style={{ color: value == '1' ? theme.text_color : theme.inactive_color }}
@@ -191,16 +191,16 @@ const TokenswapStack: React.FC = () => {
               style={{
                 backgroundImage: `linear-gradient(to right , transparent, transparent , ${theme.text_color} , transparent, transparent )`
               }}
-              className="handle  rounded-full flex items-center opacity-0 hover:opacity-100 justify-center cursor-move   h-full w-full">
-              <DragHandle className=' ' style={{ color: theme.bgColor }} />
+              className="flex items-center justify-center w-full h-full rounded-full opacity-0 cursor-move handle hover:opacity-100">
+              <DragHandle className='' style={{ color: theme.bgColor }} />
             </div>
 
-            <div className="text-yellow-100 flex" style={{
+            <div className="flex text-yellow-100" style={{
               justifyContent: 'space-between',
               alignItems: 'center',
               cursor: isMobile ? 'default' : 'move', // Disable move cursor on mobile
             }}>
-              <div className=' flex items-center justify-between  ml-auto'>
+              <div className='flex items-center justify-between ml-auto '>
                 <IconButton onClick={() => setValue('2')} >
                   <Settings style={{ color: value == '2' ? theme.text_color : theme.text_color }} />
                 </IconButton>
@@ -253,7 +253,7 @@ const TokenswapStack: React.FC = () => {
                         fullWidth
                         variant="outlined"
                         onClick={handleSwap}
-                        className="font-bold py-2 px-4 rounded-full"
+                        className="px-4 py-2 font-bold rounded-full"
                         
                         style={{
                           borderRadius: '50px',
