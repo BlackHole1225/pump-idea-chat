@@ -784,7 +784,7 @@ export default function AlphaChannel() {
                 </Box>
               </Box>
             </Box>
-            <TokenCard mint="10" mcap={tokenMCap} holders={tokenHolders} top10={top10Percent} mint_flag={mintVisibility}/>
+            {/* <TokenCard mcap={tokenMCap} holders={tokenHolders} top10={top10Percent} mint_flag={mintVisibility}/> */}
           </Box>
         ))}
       </Stack>

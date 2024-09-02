@@ -4,13 +4,13 @@ import { PieChart, Pie, Cell, Label } from 'recharts';
 import { useAppSelector } from '../../libs/redux/hooks';
 
 export default function PumpHolders() {
-    const pumpHolders = useAppSelector(state => state.pumpChart.pumpItem?.holders_info);
+    // const pumpHolders = useAppSelector(state => state.pumpChart?.pumpItem?.holders_info);
     const theme = useAppSelector(state => state.theme.current.styles)
 
     const pieData = [
-        { value: Number(pumpHolders?.top10_holders_percentage.data ?? 0), label: 'TOP 10', color: '#00FF00' },
-        { value: Number(pumpHolders?.top50_holders_percentage.data ?? 0), label: 'TOP 50', color: '#FFFFFF' },
-        { value: Number(pumpHolders?.others_holders_percentage.data ?? 0), label: 'OTHERS', color: '#F7FF05' }
+        { value: Number(0), label: 'TOP 10', color: '#00FF00' }, // pumpHolders?.top10_holders_percentage.data ??
+        { value: Number(0), label: 'TOP 50', color: '#FFFFFF' }, // pumpHolders?.top50_holders_percentage.data ?? 
+        { value: Number(0), label: 'OTHERS', color: '#F7FF05' } // pumpHolders?.others_holders_percentage.data ?? 
     ];
 
     const dominantSection = pieData.reduce((max, data) => (data.value > max.value ? data : max), pieData[0]);
