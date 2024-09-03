@@ -89,8 +89,8 @@ export const {
   setSearchParams,
 } = socketIoSlice.actions;
 
-const filterAndSortPumpList = (
-  pumpList: any,
+export const filterAndSortPumpList = (
+  pumpList: PumpTokenItem[],
   filters: IFilterTypes[]
 ): PumpTokenItem[] => {
   if (!pumpList) return [];
@@ -124,20 +124,20 @@ const filterAndSortPumpList = (
 };
 
 const getFilterValue = (
-  item: any,
+  item: PumpTokenItem,
   filterName: IFilterTypes["name"]
 ): number | undefined => {
   switch (filterName) {
-    case "holder_count":
-      return item.holder_count;
+    // case "holder_count":
+    //   return item.holder_count;
     case "liquidity":
       return item.liquidity.usd;
     case "volume_24h":
       return item.volume.h24;
     case "market_cap":
       return item.fdv;
-    case "dev holding":
-      return item.creator_balance; // Assuming `creator_balance` is what is meant by 'dev holding'
+    // case "dev holding":
+    //   return item.creator_balance; // Assuming `creator_balance` is what is meant by 'dev holding'
     default:
       return undefined;
   }
