@@ -46,7 +46,7 @@ export const fetchTokenRate = createAsyncThunk(
             if (!fromMint) return thunkAPI.rejectWithValue({ error: "Invalid from address" });
             if (!toMint) return thunkAPI.rejectWithValue({ error: "Invalid to address" });
             const response = await axios.get<{ data: { [key: string]: TokenRate } }>(`https://price.jup.ag/v6/price?ids=${fromMint}&vsToken=${toMint}`);
-            console.log("response.data", response.data)
+            // console.log("response.data", response.data)
             return response.data;
         } catch (error) {
             return thunkAPI.rejectWithValue({ error: (error as Error).message });
@@ -64,7 +64,7 @@ const fetchFreshQuotes = async ({ fromMint, toMint, amount, settings }: QuoteSwa
     url.searchParams.append('slippageBps', calculateBpsAmount(settings.selectedSlippagePercent));
     url.searchParams.append('platformFeeBps', FEE_BP);
     const response = await axios.get<QuoteSwapResponse>(url.toString());
-    console.log("quote swap result", response.data);
+    // console.log("quote swap result", response.data);
     return response.data;
 }
 
@@ -230,7 +230,7 @@ const tokenSwapSlice = createSlice({
                 state.error = (payload as any)?.error || 'Failed to fetch token rate';
             })
             .addCase(fetchQuoteSwap.fulfilled, (state, { payload }) => {
-                console.log("fetch quote swap fulfilled", state.tokenToReceiveDecimal);
+                // console.log("fetch quote swap fulfilled", state.tokenToReceiveDecimal);
                 state.fetchQuoteState = 'success';
                 state.fetchQuoteMessage = 'success';
                 state.quoteResponse = payload;

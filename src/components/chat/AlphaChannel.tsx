@@ -79,6 +79,7 @@ const fee_account = import.meta.env.VITE_FEE_ACCOUNT;
 const admin_account = import.meta.env.VITE_ADMIN_ACCOUNT;
 const random_profile_image_url = import.meta.env.VITE_RANDOM_PROFILE_URL;
 const websocket_url = import.meta.env.VITE_WEBSOCKET_URL;
+const fee_percent = import.meta.env.VITE_FEE_PERCENT;
 const connection = new Connection(solana_rpc_endpoint);
 
 const room = 'alpha';
@@ -103,50 +104,43 @@ const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
   // const connection = new Connection(solana_rpc_endpoint);
 
   const handleTip = async () => {
-    if (!connected) {
-      console.log("Wallet not connected. Connecting now...");
-      await connect();
-      return;
-    }
-    if (!publicKey) {
-      console.error("Public key is not available. Ensure wallet is connected.");
-      return;
-    }
-
-    const solPrice = await fetchSolPrice();
-    const transferAmount = solAmount * LAMPORTS_PER_SOL;
-    console.log("transferAmount", transferAmount, "solPrice", solPrice);
-    setTipStatus(
-      <>
-        <PendingButton /> Pending Approval
-      </>
-    );
-    setDismissStatus(null);
-
-    const toPubkey = new PublicKey(fee_account);
-    const feePubkey = new PublicKey(admin_account);
-
-    const lamports = Math.round(transferAmount);
-    // console.log(lamports);
-
     try {
-      const balance = await connection.getBalance(publicKey);
-      // console.log(balance);
-
-      const sendAmount = Math.round(lamports * 0.99);
-      const feeAmount = Math.round(lamports * 0.01);
-      // console.log(feeAmount);
-
-      if (balance < lamports) {
-        console.log("Insufficient Balance");
-        setTipStatus(
-          <>
-            <SkullButton /> Insufficient Balance
-          </>
-        );
-        setDismissStatus("Dismiss");
-        return;
+      if (!connected) {
+        // console.log("Wallet not connected. Connecting now...");
+        await connect();
+        throw new Error("Wallet not connected");
       }
+      if (!publicKey) {
+        throw new Error("Ensure wallet is connected");
+      }
+
+      // const result = await fetchSolPrice();
+      // if(!result.ok) throw new Error("fetching sol price failed");
+      const transferAmount = solAmount * LAMPORTS_PER_SOL;
+
+      console.log("transferAmount", transferAmount);
+
+      setTipStatus(
+        <>
+          <PendingButton /> Pending Approval
+        </>
+      );
+
+      setDismissStatus(null);
+
+      const toPubkey = new PublicKey(fee_account);
+      const feePubkey = new PublicKey(admin_account);
+
+      const lamports = Math.round(transferAmount);
+      console.log(lamports);
+
+      const balance = await connection.getBalance(publicKey);
+      console.log(balance);
+
+      const sendAmount = Math.round(lamports * (100 - fee_percent) / 100);
+      const feeAmount = Math.round(lamports * fee_percent / 100);
+
+      if (balance < lamports) throw new Error("Insufficient Balance");
 
       const transaction = new Transaction().add(
         SystemProgram.transfer({
@@ -161,7 +155,7 @@ const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
         })
       );
 
-      console.log("transaction", transaction);
+      // console.log("transaction", transaction);
 
       await sendTransaction(transaction, connection);
 
@@ -171,15 +165,16 @@ const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
         </>
       );
       setDismissStatus(null);
+      
     } catch (error) {
-      console.error("Transaction failed", error);
       setTipStatus(
         <>
-          <SkullButton /> Insufficient Balance
+          <SkullButton /> {error instanceof Error ? error.message : "Unknown Error"}
         </>
       );
       setDismissStatus("Dismiss");
     }
+
   };
 
   const handleAmountChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -191,10 +186,10 @@ const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
       return;
     }
 
-    const solPrice = await fetchSolPrice();
-    console.log("sol price", solPrice);
-    if (solPrice > 0) {
-      const calculatedSolAmount = parseFloat(usdAmount) / solPrice;
+    const result = await fetchSolPrice();
+    // console.log("sol price", solPrice);
+    if (result.data > 0) {
+      const calculatedSolAmount = parseFloat(usdAmount) / result.data;
       setAmount(usdAmount);
       setSolAmount(calculatedSolAmount);
     } else {
@@ -205,10 +200,10 @@ const TipModal: FC<TipModalProps> = ({ open, onClose, theme, call }) => {
   };
 
   const handleSelectOption = async (v: number) => {
-    const solPrice = await fetchSolPrice();
-    if (solPrice > 0) {
+    const result = await fetchSolPrice();
+    if (result.data > 0) {
       setAmount(v);
-      setSolAmount(v / solPrice);
+      setSolAmount(v / result.data);
     }
   };
 
@@ -397,7 +392,7 @@ export default function AlphaChannel() {
     return tokenAddresses;
   }
 
-  const hanldeNewMessage = async(event: MessageEvent<any>) => {
+  const hanldeNewMessage = async (event: MessageEvent<any>) => {
     const receivedMessage = JSON.parse(event.data);
     // console.log("alpha Received message:", receivedMessage);
 
@@ -409,13 +404,13 @@ export default function AlphaChannel() {
       const result = await getAlphaTokenInfo(tokenAddress[0]); // Ensure tokenMintAddress is defined and used correctly
       tokenInfo = result.data;
     }
-    // Assume this is the incoming data for profilePic which can be a string or array
-    const incomingProfilePic: string | any[] | undefined = msg.sender_pfp;
+    // // Assume this is the incoming data for profilePic which can be a string or array
+    // const incomingProfilePic: string | any[] | undefined = receivedMessage.sender_pfp;
 
-    // Fix: Ensure the profilePic is always a string or undefined
-    const profilePic: string | undefined = Array.isArray(incomingProfilePic)
-      ? incomingProfilePic.join(", ") // Convert the array to a string if it's an array
-      : incomingProfilePic; // Use the value directly if it's a string or undefined
+    // // Fix: Ensure the profilePic is always a string or undefined
+    // const profilePic: string | undefined = Array.isArray(incomingProfilePic)
+    //   ? incomingProfilePic.join(", ") // Convert the array to a string if it's an array
+    //   : incomingProfilePic; // Use the value directly if it's a string or undefined
 
     const message: Message = {
       id: receivedMessage._id,
@@ -435,7 +430,7 @@ export default function AlphaChannel() {
   const fetchMessages = async () => {
     try {
       const result = await fetchAlphaMessages();
-      if(result.ok) {
+      if (result.ok) {
         await Promise.all(
           result.data.map(async (msg: { _id: any; text: any; username: any; walletAddress: any; sender_pfp: string | any[]; timestamp: string | number | Date; }) => {
             const tokenAddress = extractTokenAddress(msg?.text)
@@ -465,7 +460,7 @@ export default function AlphaChannel() {
               tokenInfo: tokenInfo
             };
 
-            setCalls((prevCalls) => [message, ...prevCalls]);
+            setCalls((prevCalls) => [...prevCalls, message]);
           })
         );
       } else {
