@@ -460,7 +460,7 @@ export default function AlphaChannel() {
               tokenInfo: tokenInfo
             };
 
-            setCalls((prevCalls) => [message, ...prevCalls]);
+            setCalls((prevCalls) => [...prevCalls, message]);
           })
         );
       } else {
