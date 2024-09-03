@@ -92,14 +92,14 @@ export default function PumpChart() {
           >
             <Box display="flex" alignItems="center" gap=".9rem">
               {
-                pumpItem?.info.socials.map((social, index) => (
+                pumpItem?.info?.socials?.map((social, index) => (
                   social.type === "telegram" ? <TelegramButton key={index} url={social.url} /> :
                     social.type === "twitter" ? <XButton key={index} username={social.url} /> :
                       null
                 ))
               }
               {
-                pumpItem?.info.websites.map((url, index) => (
+                pumpItem?.info?.websites?.map((url, index) => (
                   <WebsiteButton key={index} url={url} />
                 ))
               }

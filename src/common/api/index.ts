@@ -23,7 +23,7 @@ export async function getPumpList(
 ) {
   const query = buildQueryParams({
     type: "CREATE_POOL",
-    limit: 30,
+    limit: 100,
     sort: "desc",
     ...params,
   });
