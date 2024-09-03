@@ -1,8 +1,8 @@
 import { Box, CircularProgress } from '@mui/material';
-import { Key, useEffect } from 'react';
+import { Key, useEffect, useRef } from 'react';
 import { useAppSelector } from '../../libs/redux/hooks';
 import PumpCard from './PumpCard';
-// import { filterAndSortPumpList } from '../../libs/redux/slices/pump-socket-slice';
+import { filterAndSortPumpList } from '../../libs/redux/slices/pump-socket-slice';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { getAllPumpList } from '../../common/api';
@@ -16,29 +16,32 @@ export default function PumpTokensGrid() {
     // const pumplist = filterAndSortPumpList(pools, filters);
     const [pumplist, setPumpList] = useState<PumpTokenItem[]>([]);
     const theme = useAppSelector(state => state.theme.current.styles);
+    const timer = useRef<NodeJS.Timeout | null>(null);
 
     const getPumptokenAddresses = async () => {
-        const result = await getAllPumpList(
-            new URLSearchParams(),
-            new URLSearchParams(),
-            // (val) => {
-            //     setPumpList(prev => [...prev, val]);
-            // }
-        );
+        const result = await getAllPumpList(new URLSearchParams(), new URLSearchParams());
         if (result.ok) {
-            setPumpList(result.tokens);
+            setPumpList(filterAndSortPumpList(result.tokens, filters));
         }
     }
 
-    // console.log("pumplist", pumplist);
+    console.log("pumplist", pumplist);
 
     const openModal = (pump: PumpTokenItem) => {
         setModalItem({ pumpItem: pump, isOpen: true });
     }
 
     useEffect(() => {
-        getPumptokenAddresses();
-    }, [])
+        if (timer.current)
+            clearInterval(timer.current);
+        timer.current = setInterval(async () => {
+            await getPumptokenAddresses();
+        }, 5000);
+        return () => {
+            if (timer.current)
+                clearInterval(timer.current);
+        };
+    }, [filters])
 
     const [modalItem, setModalItem] = useState<{
         isOpen: boolean,
