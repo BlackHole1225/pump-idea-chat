@@ -322,10 +322,18 @@ export const fetchAlphaMessages = async () => {
 export const fetchSolPrice = async () => {
   try {
     const response = await axios.get(COINGECKO_API_URL);
-    return response.data.solana.usd;
+    if(!response) throw new Error("Error fetching SOL price");
+    return {
+      ok: true,
+      data: response?.data?.solana?.usd ?? 0
+    }
   } catch (error) {
-    console.error("Error fetching SOL price:", error);
-    return 0;
+    // console.error("Error fetching SOL price:", error);
+    return {
+      ok: false,
+      data: null,
+      message: error instanceof Error ? error.message : "Unknown Error"
+    };
   }
 };
 
