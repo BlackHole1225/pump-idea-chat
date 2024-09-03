@@ -398,31 +398,38 @@ export default function AlphaChannel() {
   }
 
   const hanldeNewMessage = async(event: MessageEvent<any>) => {
-    // const receivedMessage = JSON.parse(event.data);
-    // // console.log("alpha Received message:", receivedMessage);
+    const receivedMessage = JSON.parse(event.data);
+    // console.log("alpha Received message:", receivedMessage);
 
-    // const tokenAddress = extractTokenAddress(receivedMessage?.message)
-    // // console.log("tokenAddress", tokenAddress);
-    // // Extract token address from message text and fetch token info
-    // let tokenInfo = null;
-    // if (tokenAddress) {
-    //   tokenInfo = await getAlphaTokenInfo(tokenAddress[0]); // Ensure tokenMintAddress is defined and used correctly
-    //   // console.log("token info", tokenInfo);
-    // }
+    const tokenAddress = extractTokenAddress(receivedMessage?.message)
+    // console.log("tokenAddress", tokenAddress);
+    // Extract token address from message text and fetch token info
+    let tokenInfo = null;
+    if (tokenAddress) {
+      const result = await getAlphaTokenInfo(tokenAddress[0]); // Ensure tokenMintAddress is defined and used correctly
+      tokenInfo = result.data;
+    }
+    // Assume this is the incoming data for profilePic which can be a string or array
+    const incomingProfilePic: string | any[] | undefined = msg.sender_pfp;
 
-    // const message = {
-    //   id: receivedMessage._id,
-    //   message: receivedMessage.message,
-    //   username: receivedMessage.sender_username,
-    //   address: receivedMessage.sender_wallet_address,
-    //   profilePic: receivedMessage.sender_pfp?.length
-    //     ? receivedMessage.sender_pfp
-    //     : `${random_profile_image_url}/${Math.floor(Math.random() * 50)}.jpg`,
-    //   timestamp: new Date(receivedMessage.timestamp).getTime(),
-    //   tokenInfo: tokenInfo
-    // };
+    // Fix: Ensure the profilePic is always a string or undefined
+    const profilePic: string | undefined = Array.isArray(incomingProfilePic)
+      ? incomingProfilePic.join(", ") // Convert the array to a string if it's an array
+      : incomingProfilePic; // Use the value directly if it's a string or undefined
 
-    // setCalls((prevCalls) => [message, ...prevCalls]);
+    const message: Message = {
+      id: receivedMessage._id,
+      message: receivedMessage.message,
+      username: receivedMessage.sender_username,
+      address: receivedMessage.sender_wallet_address,
+      profilePic: receivedMessage.sender_pfp?.length
+        ? receivedMessage.sender_pfp
+        : `${random_profile_image_url}/${Math.floor(Math.random() * 50)}.jpg`,
+      timestamp: formatTimestamp(receivedMessage.timestamp),
+      tokenInfo: tokenInfo
+    };
+
+    setCalls((prevCalls) => [message, ...prevCalls]);
   }
 
   const fetchMessages = async () => {
@@ -459,7 +466,6 @@ export default function AlphaChannel() {
             };
 
             setCalls((prevCalls) => [message, ...prevCalls]);
-
           })
         );
       } else {
