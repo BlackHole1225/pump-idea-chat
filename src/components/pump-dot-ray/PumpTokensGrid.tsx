@@ -25,7 +25,7 @@ export default function PumpTokensGrid() {
         }
     }
 
-    console.log("pumplist", pumplist);
+    // console.log("pumplist", pumplist);
 
     const openModal = (pump: PumpTokenItem) => {
         setModalItem({ pumpItem: pump, isOpen: true });
