@@ -19,9 +19,15 @@ export default function PumpTokensGrid() {
     const timer = useRef<NodeJS.Timeout | null>(null);
 
     const getPumptokenAddresses = async () => {
-        const result = await getAllPumpList(new URLSearchParams(), new URLSearchParams());
+        const result = await getAllPumpList(
+            new URLSearchParams(),
+            new URLSearchParams(),
+            (val) => {
+                setPumpList(prev => [...prev, val])
+            }
+        );
         if (result.ok) {
-            setPumpList(filterAndSortPumpList(result.tokens, filters));
+            // setPumpList(filterAndSortPumpList(result.tokens, filters));
         }
     }
 
