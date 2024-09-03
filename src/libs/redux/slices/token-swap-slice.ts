@@ -46,6 +46,7 @@ export const fetchTokenRate = createAsyncThunk(
             if (!fromMint) return thunkAPI.rejectWithValue({ error: "Invalid from address" });
             if (!toMint) return thunkAPI.rejectWithValue({ error: "Invalid to address" });
             const response = await axios.get<{ data: { [key: string]: TokenRate } }>(`https://price.jup.ag/v6/price?ids=${fromMint}&vsToken=${toMint}`);
+            console.log("response.data", response.data)
             return response.data;
         } catch (error) {
             return thunkAPI.rejectWithValue({ error: (error as Error).message });
@@ -63,6 +64,7 @@ const fetchFreshQuotes = async ({ fromMint, toMint, amount, settings }: QuoteSwa
     url.searchParams.append('slippageBps', calculateBpsAmount(settings.selectedSlippagePercent));
     url.searchParams.append('platformFeeBps', FEE_BP);
     const response = await axios.get<QuoteSwapResponse>(url.toString());
+    console.log("quote swap result", response.data);
     return response.data;
 }
 
@@ -228,20 +230,26 @@ const tokenSwapSlice = createSlice({
                 state.error = (payload as any)?.error || 'Failed to fetch token rate';
             })
             .addCase(fetchQuoteSwap.fulfilled, (state, { payload }) => {
+                console.log("fetch quote swap fulfilled", state.tokenToReceiveDecimal);
                 state.fetchQuoteState = 'success';
                 state.fetchQuoteMessage = 'success';
                 state.quoteResponse = payload;
-                if (state.tokenToReceive?.baseToken?.address !== NativeToken.baseToken.address) {
-                    const feeAmount = parseEther(Number(payload.platformFee.amount), Number(state.tokenToReceiveDecimal));
-                    const outAmount = parseEther(Number(payload.outAmount), Number(state.tokenToReceiveDecimal));
-                    const feeOut = (feeAmount / outAmount) * parseEther(Number(payload.inAmount), Number(state.tokenToSendDecimal));
-                    const formattedFee = formatNumber(feeOut);
-                    state.platformFeeAmount = formattedFee as any;
-                    state.quoteResponse.platformFee.fee_currency = NativeToken.baseToken.symbol;
-                } else {
+                // if (state.tokenToReceive?.baseToken?.address !== NativeToken.baseToken.address) {
+                //     const feeAmount = parseEther(Number(payload.platformFee.amount), Number(state.tokenToReceiveDecimal));
+                //     const outAmount = parseEther(Number(payload.outAmount), Number(state.tokenToReceiveDecimal));
+                //     const feeOut = (feeAmount / outAmount) * parseEther(Number(payload.inAmount), Number(state.tokenToSendDecimal));
+                //     const formattedFee = formatNumber(feeOut);
+                //     state.platformFeeAmount = formattedFee as any;
+                //     state.quoteResponse.platformFee.fee_currency = NativeToken.baseToken.symbol;
+                // } else {
+                //     state.platformFeeAmount = parseEther(Number(payload.platformFee.amount), Number(state.tokenToSendDecimal))
+                // }
+                if (payload.routePlan.length) {
+                    const route = payload.routePlan[0]
                     state.platformFeeAmount = parseEther(Number(payload.platformFee.amount), Number(state.tokenToSendDecimal))
+                    state.amountToReceive = parseEther(Number(route.swapInfo.outAmount), Number(state.tokenToReceiveDecimal));
                 }
-                state.amountToReceive = parseEther(Number(payload.outAmount), Number(state.tokenToReceiveDecimal));
+
             })
             .addCase(fetchQuoteSwap.pending, (state) => {
                 state.amountToReceive = ''

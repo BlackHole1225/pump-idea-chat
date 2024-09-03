@@ -23,7 +23,7 @@ export async function getPumpList(
 ) {
   const query = buildQueryParams({
     type: "CREATE_POOL",
-    limit: 30,
+    limit: 100,
     sort: "desc",
     ...params,
   });
@@ -334,13 +334,17 @@ export async function getTokenDecimals(tokenMintAddress: string = NATIVE_TOKEN_A
     // Convert the token mint address string to a PublicKey
     const mintPublicKey = new PublicKey(tokenMintAddress);
 
+    // console.log("mint key", mintPublicKey);
+
     // Fetch the mint information for the token
     const mintInfo = await getMint(rpcConnection, mintPublicKey);
+
+    // console.log("mint info", mintInfo);
 
     // Return the decimals from the mint information
     return mintInfo.decimals;
   } catch (error) {
-    console.error("Error fetching token decimals:", error);
+    console.log("Error fetching token decimals:", error);
     return 0; // Return null if there is an error
   }
 }

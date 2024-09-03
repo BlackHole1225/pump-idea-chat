@@ -28,8 +28,10 @@ export default function PumpCard({ pumpItem, onOpenModal }: PumpCardProps) {
   const dispatch = useAppDispatch();
   const atClickBuy = async () => {
     dispatch(setSelectedtokenToReceive(pumpItem));
-    setTokenToReceiveDecimal(await getTokenDecimals(pumpItem?.baseToken?.address));
-    setTokenToSendDecimal(9);
+    const decimals = await getTokenDecimals(pumpItem?.baseToken?.address);
+    console.log("token decimals", decimals);
+    dispatch(setTokenToReceiveDecimal(decimals));
+    dispatch(setTokenToSendDecimal(9));
   }
   const pumpChartStatus = useAppSelector(state => state.pumpChart.status);
   const pItem = useAppSelector(state => state.pumpChart.pumpItem);
